@@ -1,0 +1,14 @@
+{
+  "name": "sample-grading-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ตัวอย่างแกนกลางการตรวจงาน UX/UI — รันได้จริงโดยไม่ต้องมี GPU และไม่ต้องลง dependency",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "demo": "node --experimental-strip-types src/demo.ts",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  }
+}
