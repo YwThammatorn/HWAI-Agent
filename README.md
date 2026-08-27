@@ -1,5 +1,11 @@
 # HWAI Grading Agent — AI ช่วยตรวจงาน UX/UI
 
+## commit version remark (from dev)
+
+- bypass anonymized.ts in pipeline temporary by commenting to avoid error
+- all rubric criterions have only 'llm' in layer column
+- all tests still use ai-generated submission in rubric.ts (not uploaded file)
+
 ## เริ่มต้นใช้งาน
 
 ```bash
@@ -13,7 +19,7 @@ GROQ_API_KEY=gsk_... npm run server  # เปิด web UI ที่ http://loca
 
 1. เปิดเบราว์เซอร์ไปที่ `http://localhost:3000`
 2. อัปโหลดไฟล์ **Rubric (.csv)** — ดูรูปแบบด้านล่าง
-3. อัปโหลดไฟล์ **PDF** ของนักศึกษา
+3. อัปโหลดไฟล์ **PDF** หรือ **.jpg / .png** ของนักศึกษา
 4. กด **เริ่มให้คะแนน**
 5. ดูผลคะแนนรายเกณฑ์ + บันทึกสืบย้อน
 
