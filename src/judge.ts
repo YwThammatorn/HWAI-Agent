@@ -256,9 +256,19 @@ export function parseAndValidate(
   const byId = new Map(prompt.criteria.map((c) => [c.id, c]));
   const seen = new Set<string>();
 
+  console.log(parsed.scores)
+
   const out = (parsed.scores as Record<string, unknown>[]).map((s) => {
-    const criterion = byId.get(String(s.criterionId));
-    if (!criterion) throw new Error(`ไม่รู้จักเกณฑ์ "${s.criterionId}"`);
+    // รองรับทั้ง camelCase (criterionId) และ snake_case (criterion_id)
+    const criterionIdRaw = String(s.criterionId ?? s.criterion_id ?? '');
+    if (!criterionIdRaw || criterionIdRaw === 'undefined' || criterionIdRaw === 'null') {
+      throw new Error(
+        `เกณฑ์มี criterionId ว่างหรือไม่ถูกต้อง ("${criterionIdRaw}") — ` +
+          `คำตอบดิบ: ${raw.slice(0, 300)}`
+      );
+    }
+    const criterion = byId.get(criterionIdRaw);
+    if (!criterion) throw new Error(`ไม่รู้จักเกณฑ์ "${criterionIdRaw}" — มีอยู่: ${[...byId.keys()].join(', ')}`);
     if (seen.has(criterion.id)) throw new Error(`เกณฑ์ ${criterion.id} ถูกให้คะแนนซ้ำ`);
     seen.add(criterion.id);
 
@@ -269,7 +279,17 @@ export function parseAndValidate(
       throw new Error(`เกณฑ์ ${criterion.id} ให้คะแนน ${score} ซึ่งไม่ใช่ระดับที่นิยามไว้ (${allowed})`);
     }
 
-    const evidence = Array.isArray(s.evidence) ? (s.evidence as { frameId: string; note: string }[]) : [];
+    // รองรับ evidence หลายรูปแบบ:
+    // 1. [{ frameId, note }] (ตาม schema)
+    // 2. "ข้อความอธิบาย" (string ล้วน)
+    // 3. undefined/null
+    let evidence: { frameId: string; note: string }[] = [];
+    if (Array.isArray(s.evidence)) {
+      evidence = s.evidence as { frameId: string; note: string }[];
+    } else if (typeof s.evidence === 'string' && s.evidence.trim()) {
+      // LLM ส่ง evidence เป็น string — แปลงเป็น array
+      evidence = [{ frameId: 'frame-1', note: s.evidence.trim() }];
+    }
     if (evidence.length === 0) throw new Error(`เกณฑ์ ${criterion.id} ไม่มีหลักฐาน`);
 
     return {

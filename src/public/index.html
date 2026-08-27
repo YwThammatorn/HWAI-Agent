@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HWAI Grading Agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      color: #f8fafc;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    /* ── Upload Section ── */
+    .upload-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .upload-card {
+      background: #1e293b;
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-card:hover {
+      border-color: #3b82f6;
+      background: #1e293b;
+    }
+
+    .upload-card.has-file {
+      border-color: #22c55e;
+      border-style: solid;
+    }
+
+    .upload-card input[type="file"] { display: none; }
+
+    .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .upload-label { font-weight: 600; margin-bottom: 0.25rem; }
+    .upload-hint { font-size: 0.8rem; color: #64748b; }
+    .upload-filename {
+      margin-top: 0.75rem;
+      padding: 0.4rem 0.75rem;
+      background: #0f172a;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #22c55e;
+      word-break: break-all;
+    }
+
+    /* ── Actions ── */
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      flex: 1;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: #2563eb; }
+    .btn-primary:disabled { background: #475569; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #334155;
+      color: #e2e8f0;
+    }
+
+    .btn-secondary:hover { background: #475569; }
+
+    /* ── Status ── */
+    .status {
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+
+    .status.loading {
+      display: block;
+      background: #1e3a5f;
+      border: 1px solid #3b82f6;
+      color: #93c5fd;
+    }
+
+    .status.error {
+      display: block;
+      background: #3b1a1a;
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+    }
+
+    .status.success {
+      display: block;
+      background: #1a3b2a;
+      border: 1px solid #22c55e;
+      color: #86efac;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #93c5fd;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Results ── */
+    .results { display: none; }
+
+    .results.visible { display: block; }
+
+    .result-card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .result-card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .total-score {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .total-score .number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #3b82f6;
+    }
+
+    .total-score .label {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    /* ── Score Table ── */
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .score-table th,
+    .score-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+
+    .score-table th {
+      color: #94a3b8;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .score-bar {
+      height: 8px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.25rem;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .source-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .source-rule { background: #1e3a5f; color: #93c5fd; }
+    .source-llm { background: #3b1a3b; color: #d8b4fe; }
+
+    /* ── Evidence ── */
+    .evidence-list {
+      margin-top: 0.5rem;
+      padding-left: 1rem;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+
+    .evidence-list li { margin-bottom: 0.25rem; }
+
+    /* ── Trace ── */
+    .trace-list {
+      font-size: 0.8rem;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .trace-item {
+      display: flex;
+      gap: 1rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .trace-time { color: #64748b; min-width: 80px; }
+    .trace-step { color: #f59e0b; min-width: 90px; font-weight: 600; }
+    .trace-detail { color: #94a3b8; }
+
+    /* ── PDF Info ── */
+    .pdf-pages {
+      font-size: 0.85rem;
+    }
+
+    .pdf-page {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #334155;
+    }
+
+    .pdf-page-id { color: #3b82f6; font-weight: 600; }
+    .pdf-page-text { color: #94a3b8; margin-top: 0.25rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .upload-section { grid-template-columns: 1fr; }
+      body { padding: 1rem; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎓 HWAI Grading Agent</h1>
+    <p class="subtitle">อัปโหลด rubric (.csv) และเอกสาร PDF เพื่อให้ AI ให้คะแนน</p>
+
+    <!-- Upload Section -->
+    <div class="upload-section">
+      <div class="upload-card" id="rubricCard" onclick="document.getElementById('rubricInput').click()">
+        <input type="file" id="rubricInput" accept=".csv" />
+        <div class="upload-icon">📋</div>
+        <div class="upload-label">Rubric File</div>
+        <div class="upload-hint">เลือกไฟล์ .csv</div>
+        <div class="upload-filename" id="rubricName" style="display:none"></div>
+      </div>
+
+      <div class="upload-card" id="docCard" onclick="document.getElementById('docInput').click()">
+        <input type="file" id="docInput" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" />
+        <div class="upload-icon">📄</div>
+        <div class="upload-label">Document</div>
+        <div class="upload-hint">เลือกไฟล์ .pdf / .jpg / .png</div>
+        <div class="upload-filename" id="docName" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn btn-primary" id="gradeBtn" disabled onclick="startGrading()">
+        🚀 เริ่มให้คะแนน
+      </button>
+      <button class="btn btn-secondary" onclick="resetAll()">ล้าง</button>
+    </div>
+
+    <!-- Status -->
+    <div class="status" id="status"></div>
+
+    <!-- Results -->
+    <div class="results" id="results">
+      <!-- Total Score -->
+      <div class="result-card">
+        <h2>📊 ผลการให้คะแนน</h2>
+        <div class="total-score">
+          <div class="number" id="totalScore">-</div>
+          <div class="label">คะแนนรวมถ่วงน้ำหนัก</div>
+        </div>
+      </div>
+
+      <!-- File Info -->
+      <div class="result-card" id="fileInfoCard" style="display:none">
+        <h2 id="fileInfoTitle">📄 ข้อมูลจากไฟล์</h2>
+        <div class="pdf-pages" id="filePages"></div>
+      </div>
+
+      <!-- Score Details -->
+      <div class="result-card">
+        <h2>📝 คะแนนรายเกณฑ์</h2>
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th>เกณฑ์</th>
+              <th>คะแนน</th>
+              <th>แหล่งที่มา</th>
+              <th>เหตุผล</th>
+            </tr>
+          </thead>
+          <tbody id="scoreBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Trace -->
+      <div class="result-card">
+        <h2>🔍 บันทึกสืบย้อน</h2>
+        <div class="trace-list" id="traceList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let rubricCsv = null;
+    let pdfBase64 = null;
+    let pdfFileName = null;
+    let jpgBase64 = null;
+    let jpgFileName = null;
+    let jpgMediaType = null;
+    let docType = null; // 'pdf' or 'image'
+
+    // ── File Handlers ──
+    document.getElementById('rubricInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        rubricCsv = reader.result;
+        document.getElementById('rubricName').textContent = file.name;
+        document.getElementById('rubricName').style.display = 'block';
+        document.getElementById('rubricCard').classList.add('has-file');
+        checkReady();
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('docInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
+      const isPdf = ext === 'pdf';
+      const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+
+      if (!isPdf && !isImage) {
+        alert('กรุณาเลือกไฟล์ PDF หรือ JPG/PNG/GIF/WebP เท่านั้น');
+        return;
+      }
+
+      // Reset previous doc selection
+      pdfBase64 = null;
+      pdfFileName = null;
+      jpgBase64 = null;
+      jpgFileName = null;
+      jpgMediaType = null;
+      docType = null;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1];
+        if (isPdf) {
+          pdfBase64 = base64;
+          pdfFileName = file.name;
+          docType = 'pdf';
+        } else {
+          const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' };
+          jpgBase64 = base64;
+          jpgFileName = file.name;
+          jpgMediaType = mimeMap[ext] || 'image/jpeg';
+          docType = 'image';
+        }
+        document.getElementById('docName').textContent = file.name;
+        document.getElementById('docName').style.display = 'block';
+        document.getElementById('docCard').classList.add('has-file');
+        checkReady();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function checkReady() {
+      // ต้องมี rubric + อย่างน้อยหนึ่งใน PDF หรือ JPG
+      document.getElementById('gradeBtn').disabled = !(rubricCsv && (pdfBase64 || jpgBase64));
+    }
+
+    // ── Grading ──
+    async function startGrading() {
+      const btn = document.getElementById('gradeBtn');
+      const status = document.getElementById('status');
+      const results = document.getElementById('results');
+
+      btn.disabled = true;
+      btn.textContent = '⏳ กำลังให้คะแนน...';
+      results.classList.remove('visible');
+
+      status.className = 'status loading';
+      status.innerHTML = '<span class="spinner"></span> กำลังวิเคราะห์เอกสารและให้คะแนน...';
+
+      try {
+        const res = await fetch('/api/grade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            rubricCsv,
+            pdfBase64: pdfBase64 || null,
+            pdfFileName: pdfFileName || null,
+            jpgBase64: jpgBase64 || null,
+            jpgFileName: jpgFileName || null,
+            jpgMediaType: jpgMediaType || null,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'เกิดข้อผิดพลาด');
+        }
+
+        // Show success
+        status.className = 'status success';
+        status.textContent = '✅ ให้คะแนนเสร็จสิ้น';
+
+        // Render results
+        renderResults(data);
+        results.classList.add('visible');
+
+      } catch (err) {
+        status.className = 'status error';
+        status.textContent = `❌ ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 เริ่มให้คะแนน';
+        checkReady();
+      }
+    }
+
+    // ── Render Results ──
+    function renderResults(data) {
+      const { record, fileInfo, rubric } = data;
+
+      // Total score
+      const total = (record.weightedTotal * 100).toFixed(1);
+      document.getElementById('totalScore').textContent = `${total} / 100`;
+
+      // File info
+      if (fileInfo) {
+        const card = document.getElementById('fileInfoCard');
+        card.style.display = 'block';
+        const titleEl = document.getElementById('fileInfoTitle');
+        titleEl.textContent = fileInfo.type === 'pdf' ? '📄 ข้อมูลจาก PDF' : '🖼️ ข้อมูลจากไฟล์ภาพ';
+        const pagesDiv = document.getElementById('filePages');
+        const imageTag = fileInfo.hasImage ? ' <span style="color:#22c55e">✓ มีภาพ base64 แนบ</span>' : '';
+        pagesDiv.innerHTML = fileInfo.pages.map(p => `
+          <div class="pdf-page">
+            <span class="pdf-page-id">${p.id}</span> — ${p.name}
+            <div class="pdf-page-text">${escapeHtml(p.textPreview)}${p.textPreview.length >= 200 ? '...' : ''}</div>
+          </div>
+        `).join('') + (fileInfo.type === 'jpg' ? `<div style="margin-top:0.75rem;padding:0.5rem;background:#0f172a;border-radius:6px;font-size:0.85rem">🖼️ ไฟล์: ${escapeHtml(fileInfo.fileName)}${imageTag}</div>` : '');
+      }
+
+      // Score details
+      const scoreBody = document.getElementById('scoreBody');
+      scoreBody.innerHTML = record.scores.map(s => {
+        const criterion = rubric.criteria.find(c => c.id === s.criterionId);
+        const max = criterion?.max || 3;
+        const pct = (s.score / max) * 100;
+        const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+        const sourceClass = s.source === 'rule' ? 'source-rule' : 'source-llm';
+
+        return `
+          <tr>
+            <td>
+              <strong>${s.criterionId}</strong> — ${criterion?.name || s.criterionId}
+              <ul class="evidence-list">
+                ${s.evidence.map(e => `<li><strong>${e.frameId}</strong>: ${escapeHtml(e.note)}</li>`).join('')}
+              </ul>
+            </td>
+            <td>
+              <strong>${s.score}</strong> / ${max}
+              <div class="score-bar">
+                <div class="score-bar-fill" style="width: ${pct}%; background: ${color}"></div>
+              </div>
+            </td>
+            <td><span class="source-badge ${sourceClass}">${s.source}</span></td>
+            <td style="color: #94a3b8; font-size: 0.85rem">${escapeHtml(s.reason)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // Trace
+      const traceList = document.getElementById('traceList');
+      traceList.innerHTML = record.trace.map(t => {
+        const time = new Date(t.at).toLocaleTimeString('th-TH');
+        return `
+          <div class="trace-item">
+            <span class="trace-time">${time}</span>
+            <span class="trace-step">${t.step}</span>
+            <span class="trace-detail">${escapeHtml(t.detail)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function resetAll() {
+      rubricCsv = null;
+      pdfBase64 = null;
+      pdfFileName = null;
+      jpgBase64 = null;
+      jpgFileName = null;
+      jpgMediaType = null;
+
+      document.getElementById('rubricInput').value = '';
+      document.getElementById('docInput').value = '';
+      document.getElementById('rubricName').style.display = 'none';
+      document.getElementById('docName').style.display = 'none';
+      document.getElementById('rubricCard').classList.remove('has-file');
+      document.getElementById('docCard').classList.remove('has-file');
+      document.getElementById('gradeBtn').disabled = true;
+      document.getElementById('status').className = 'status';
+      document.getElementById('results').classList.remove('visible');
+      document.getElementById('fileInfoCard').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

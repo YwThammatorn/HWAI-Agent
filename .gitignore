@@ -1,1 +1,12 @@
 .env
+node_modules/
+
+# FreeBuff CLI Things
+.freebuff/
+
+# Test materials
+materials/
+
+# Ignore large Tesseract OCR binary language data models
+*.traineddata
+tessdata/

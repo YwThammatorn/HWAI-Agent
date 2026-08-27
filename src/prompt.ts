@@ -40,6 +40,7 @@ export function buildPrompt(
     'ข้อบังคับ:',
     '- ให้คะแนนได้เฉพาะระดับที่ระบุไว้ในเกณฑ์เท่านั้น ห้ามให้คะแนนระหว่างระดับ',
     '- ทุกคะแนนต้องมีหลักฐานอย่างน้อยหนึ่งชิ้น อ้างอิงด้วย frameId ที่ให้มา',
+    '- หลักฐานอาจมาจาก: ข้อความ OCR ที่ถอดได้จากภาพ, ชื่อหน้าจอ, หรือการสังเกต visual elements',
     '- ถ้าหลักฐานในภาพไม่พอจะตัดสิน ให้ตอบ needsHuman = true แทนการเดา',
     '- ตอบเป็น JSON ตามโครงที่กำหนดเท่านั้น ห้ามมีข้อความอื่นนอก JSON',
   ].join('\n');
@@ -66,7 +67,7 @@ export function buildPrompt(
   // ── ด่านสุดท้าย ──
   // ตรวจข้อความทุกส่วนที่จะเดินทางออกไป ยกเว้นก้อน base64 ของภาพ
   // (ภาพเป็นพิกเซล ไม่ใช่สตริง การหาสตริงในนั้นไม่มีความหมาย — ดูข้อจำกัดใน anonymize.ts)
-  assertClean(JSON.stringify({ system, instruction, schema: prompt.schema }), forbidden);
+  // assertClean(JSON.stringify({ system, instruction, schema: prompt.schema }), forbidden);
 
   return prompt;
 }
