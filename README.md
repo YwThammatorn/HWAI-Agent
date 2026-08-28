@@ -2,9 +2,10 @@
 
 ## commit version remark (from dev)
 
-- bypass anonymized.ts in pipeline temporary by commenting to avoid error
 - all rubric criterions have only 'llm' in layer column
-- all tests still use ai-generated submission in rubric.ts (not uploaded file)
+- all test files is blank
+- UI can upload and grade just 1 submission
+- Submission personal data still created not input -> jpgToSubmission()
 
 ## เริ่มต้นใช้งาน
 
