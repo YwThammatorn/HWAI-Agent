@@ -99,7 +99,7 @@ export class GroqJudge implements Judge {
     }
 
     // Debug: แสดงคำตอบดิบจากโมเดล
-    console.log(`  📝 Groq raw response (first 500 chars):\n${raw.slice(0, 500)}`);
+    console.log(`  📝 Groq returned response }`);
 
     return {
       scores: parseAndValidate(raw, prompt, this.name),

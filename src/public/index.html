@@ -294,7 +294,7 @@
       </div>
 
       <div class="upload-card" id="docCard" onclick="document.getElementById('docInput').click()">
-        <input type="file" id="docInput" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" />
+        <input type="file" id="docInput" accept=".pdf,.jpg,.jpeg,.png" />
         <div class="upload-icon">📄</div>
         <div class="upload-label">Document</div>
         <div class="upload-hint">เลือกไฟล์ .pdf / .jpg / .png</div>
@@ -368,8 +368,12 @@
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
+
+       // Define what happens when reading succeeds
       reader.onload = () => {
         rubricCsv = reader.result;
+
+        // Display in UI
         document.getElementById('rubricName').textContent = file.name;
         document.getElementById('rubricName').style.display = 'block';
         document.getElementById('rubricCard').classList.add('has-file');
@@ -383,10 +387,10 @@
       if (!file) return;
       const ext = file.name.split('.').pop().toLowerCase();
       const isPdf = ext === 'pdf';
-      const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+      const isImage = ['jpg', 'jpeg', 'png'].includes(ext);
 
       if (!isPdf && !isImage) {
-        alert('กรุณาเลือกไฟล์ PDF หรือ JPG/PNG/GIF/WebP เท่านั้น');
+        alert('กรุณาเลือกไฟล์ PDF หรือ JPG/PNG เท่านั้น');
         return;
       }
 
@@ -399,6 +403,8 @@
       docType = null;
 
       const reader = new FileReader();
+
+      // Define what happens when reading succeeds
       reader.onload = () => {
         const base64 = reader.result.split(',')[1];
         if (isPdf) {
@@ -406,12 +412,14 @@
           pdfFileName = file.name;
           docType = 'pdf';
         } else {
-          const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' };
+          const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png' };
           jpgBase64 = base64;
           jpgFileName = file.name;
           jpgMediaType = mimeMap[ext] || 'image/jpeg';
           docType = 'image';
         }
+
+        // Display in UI
         document.getElementById('docName').textContent = file.name;
         document.getElementById('docName').style.display = 'block';
         document.getElementById('docCard').classList.add('has-file');

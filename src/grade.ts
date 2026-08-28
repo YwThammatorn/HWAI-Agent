@@ -23,7 +23,7 @@ export async function grade(
   const log = (step: string, detail: string) =>
     trace.push({ at: new Date().toISOString(), step, detail });
 
-  // ── ยามนโยบาย: ตรวจก่อนแตะข้อมูลด้วยซ้ำ ──
+  // ── Policy Guard : ตรวจก่อนแตะข้อมูล ──
   assertMayLeaveFaculty(submission.externalUseConsent, judge);
   log('policy', `อนุญาตให้ใช้ ${judge.name} กับชิ้นงานนี้`);
 

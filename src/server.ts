@@ -4,10 +4,10 @@ import { join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
-import { parseCsvRubric } from './csv-rubric.ts';
-import { pdfToSubmission } from './pdf-reader.ts';
-import { ocrImage } from './ocr.ts';
-import { GroqJudge } from './groq-judge.ts';
+import { parseCsvRubric } from './rubric.ts';
+import { pdfToSubmission } from './tool/pdf-reader.ts';
+import { ocrImage } from './tool/ocr.ts';
+import { GroqJudge } from './model.ts';
 import { grade } from './grade.ts';
 import { MockJudge } from './judge.ts';
 import { anonymize } from './anonymize.ts';
@@ -38,11 +38,14 @@ const server = createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
       await serveStatic(res, 'index.html', 'text/html');
-    } else if (req.method === 'GET' && req.url === '/api/health') {
+    } 
+    else if (req.method === 'GET' && req.url === '/api/health') {
       json(res, 200, { status: 'ok', time: new Date().toISOString() });
-    } else if (req.method === 'POST' && req.url === '/api/grade') {
+    } 
+    else if (req.method === 'POST' && req.url === '/api/grade') {
       await handleGrade(req, res);
-    } else {
+    } 
+    else {
       // serve static files
       const filePath = req.url?.slice(1) || 'index.html';
       const fullPath = join(PUBLIC_DIR, filePath);
@@ -184,9 +187,9 @@ async function jpgToSubmission(
   mediaType: string,
 ): Promise<Submission> {
   // ตรวจ media type
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const validTypes = ['image/jpeg', 'image/png'];
   if (!validTypes.includes(mediaType)) {
-    throw new Error(`ไม่รองรับไฟล์ประเภท ${mediaType} — รองรับเฉพาะ JPG, PNG, GIF, WebP`);
+    throw new Error(`ไม่รองรับไฟล์ประเภท ${mediaType} — รองรับเฉพาะ JPG, PNG`);
   }
 
   // ตรวจว่า base64 ถูกต้อง

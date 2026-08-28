@@ -56,7 +56,7 @@ function collectForbidden(s: Submission): string[] {
     s.student.id,
     s.student.name,
     s.student.email,
-    // ส่วนหน้าของอีเมลก็ระบุตัวตนได้เท่ากัน
+    // ส่วนหน้าของอีเมลสถาบัน
     s.student.email.split('@')[0],
     s.groupName,
     s.fileName,
