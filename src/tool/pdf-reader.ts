@@ -20,6 +20,7 @@ async function loadPdfParse() {
 export async function pdfToSubmission(
   pdfBuffer: Buffer,
   fileName: string,
+  students?: { id: string; name: string; email: string }[],
 ): Promise<Submission> {
   const pdf = await loadPdfParse();
   const data = await pdf(pdfBuffer);
@@ -47,14 +48,14 @@ export async function pdfToSubmission(
   // สร้าง Submission ที่ pipeline ใช้ได้
   // ไม่มีนักศึกษาจริง — ใช้ placeholder
   // externalUseConsent = true เพราะต้องส่งออก Groq (API ภายนอก)
+  const members = students && students.length > 0
+    ? students
+    : [{ id: 'pdf-upload', name: 'PDF Upload', email: 'pdf@upload.local' }];
+
   return {
     submissionId: `pdf-${Date.now()}`,
-    student: {
-      id: 'pdf-upload',
-      name: 'PDF Upload',
-      email: 'pdf@upload.local',
-    },
-    groupName: 'PDF Upload',
+    student: members[0],
+    students: members,
     fileName,
     folderName: '',
     figma: {

@@ -52,12 +52,26 @@ export function anonymize(submission: Submission): AnonymizeResult {
  * เพิ่มช่องใหม่เมื่อไร ต้องมาเพิ่มที่นี่ที่เดียว
  */
 function collectForbidden(s: Submission): string[] {
+  // รวบรวมข้อมูลจากสมาชิกทุกคนในกลุ่ม
+  const members = s.students?.length > 0 ? s.students : [s.student];
+
+  const memberData: string[] = [];
+  const memberWords: string[] = [];
+
+  for (const m of members) {
+    memberData.push(
+      m.id,
+      m.name,
+      m.email,
+      // ส่วนหน้าของอีเมลสถาบัน
+      m.email.split('@')[0],
+    );
+    // แตกชื่อ-นามสกุลออกเป็นคำ ๆ ด้วย เพราะนักศึกษามักพิมพ์แค่ชื่อต้น
+    memberWords.push(...m.name.split(/\s+/));
+  }
+
   const raw = [
-    s.student.id,
-    s.student.name,
-    s.student.email,
-    // ส่วนหน้าของอีเมลสถาบัน
-    s.student.email.split('@')[0],
+    ...memberData,
     s.groupName,
     s.fileName,
     // เจอจริงจากการตรวจลิงก์ Figma: metadata ที่ตามไฟล์มาโดยเจ้าของไม่รู้ตัว
@@ -66,10 +80,7 @@ function collectForbidden(s: Submission): string[] {
     s.fileName.replace(/\.[a-z0-9]+$/i, ''),
   ];
 
-  // แตกชื่อ-นามสกุลออกเป็นคำ ๆ ด้วย เพราะนักศึกษามักพิมพ์แค่ชื่อต้น
-  const words = s.student.name.split(/\s+/);
-
-  return [...new Set([...raw, ...words])]
+  return [...new Set([...raw, ...memberWords])]
     .map((x) => x.trim())
     .filter((x) => x.length >= MIN_FORBIDDEN_LENGTH);
 }

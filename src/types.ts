@@ -74,7 +74,10 @@ export type RenderedImage = {
  */
 export type Submission = {
   submissionId: string;
+  /** ข้อมูลนักศึกษาคนแรก/ผู้รับผิดชอบ — เพื่อ backward compatibility */
   student: { id: string; name: string; email: string };
+  /** สมาชิกทั้งหมดในกลุ่ม (ถ้างานเดี่ยว จะมีแค่ 1 คน ตรงกับ student) */
+  students: { id: string; name: string; email: string }[];
   groupName: string;
   fileName: string;
   /** ชื่อโฟลเดอร์ที่ติดมากับไฟล์ Figma โดยเจ้าของไม่รู้ตัว (เจอจริงตอนตรวจลิงก์ใน ticket 07) */

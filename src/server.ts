@@ -83,16 +83,32 @@ server.listen(PORT, () => {
 //  handlers
 // ══════════════════════════════════════════════════════════════════
 
+type StudentInfo = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+type DocUpload = {
+  base64: string;
+  fileName: string;
+  type: 'pdf' | 'image';
+  mediaType: string;
+};
+
+type SubmissionInput = {
+  mode?: 'single' | 'group';
+  groupName?: string;
+  students?: { id?: string; name?: string; email?: string }[];
+  doc: DocUpload;
+};
+
 async function handleGrade(req: IncomingMessage, res: ServerResponse) {
   const body = await readJsonBody(req);
 
-  const { rubricCsv, pdfBase64, pdfFileName, jpgBase64, jpgFileName, jpgMediaType, useMock } = body as {
+  const { rubricCsv, submissions, useMock } = body as {
     rubricCsv?: string;
-    pdfBase64?: string | null;
-    pdfFileName?: string | null;
-    jpgBase64?: string | null;
-    jpgFileName?: string | null;
-    jpgMediaType?: string | null;
+    submissions?: SubmissionInput[];
     useMock?: boolean;
   };
 
@@ -100,8 +116,8 @@ async function handleGrade(req: IncomingMessage, res: ServerResponse) {
     json(res, 400, { error: 'กรุณาอัปโหลดไฟล์ rubric (.csv)' });
     return;
   }
-  if (!pdfBase64 && !jpgBase64) {
-    json(res, 400, { error: 'กรุณาอัปโหลดไฟล์ PDF หรือ JPG อย่างใดอย่างหนึ่ง' });
+  if (!submissions || submissions.length === 0) {
+    json(res, 400, { error: 'กรุณาเพิ่มชิ้นงานอย่างน้อย 1 ตัว' });
     return;
   }
 
@@ -114,32 +130,7 @@ async function handleGrade(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
-  // 2. สร้าง Submission จากไฟล์ที่อัปโหลด
-  let submission;
-  try {
-    if (pdfBase64) {
-      // PDF → Submission (แต่ละหน้าเป็น frame)
-      const pdfBuffer = Buffer.from(pdfBase64, 'base64');
-      submission = await pdfToSubmission(pdfBuffer, pdfFileName || 'upload.pdf');
-    } else {
-      // JPG → Submission (ภาพเดียวเป็น frame เดียว + OCR ถอดข้อความ)
-      submission = await jpgToSubmission(jpgBase64!, jpgFileName || 'upload.jpg', jpgMediaType || 'image/jpeg');
-    }
-
-    // ถ้ามีทั้ง PDF และ JPG ให้เพิ่มภาพเข้าไปใน submission ด้วย
-    if (pdfBase64 && jpgBase64) {
-      submission.images.push({
-        frameId: submission.figma.frames[0]?.id || 'frame-1',
-        mediaType: (jpgMediaType as 'image/jpeg') || 'image/jpeg',
-        dataBase64: jpgBase64,
-      });
-    }
-  } catch (err) {
-    json(res, 400, { error: `ไม่สามารถอ่านไฟล์ได้: ${(err as Error).message}` });
-    return;
-  }
-
-  // 3. เลือก judge
+  // 2. เลือก judge
   let judge;
   if (useMock) {
     judge = new MockJudge();
@@ -154,38 +145,88 @@ async function handleGrade(req: IncomingMessage, res: ServerResponse) {
     judge = new GroqJudge(apiKey);
   }
 
-  // 4. รัน grading pipeline
-  try {
-    const record = await grade(submission, rubric, judge);
+  // 3. ประมวลผลทีละชิ้นงาน → grade ทีละตัว
+  const results: {
+    record: unknown;
+    fileInfo: { type: string; fileName: string; pageCount: number; hasImage: boolean; pages: { id: string; name: string; textPreview: string }[] };
+    fileName: string;
+  }[] = [];
+  const errors: { fileName: string; error: string }[] = [];
 
-    // ข้อมูลไฟล์ที่อัปโหลด สำหรับ UI แสดงผล
-    const fileInfo = {
-      type: pdfBase64 ? 'pdf' : 'jpg',
-      fileName: pdfBase64 ? (pdfFileName || 'upload.pdf') : (jpgFileName || 'upload.jpg'),
-      pageCount: submission.figma.frames.length,
-      hasImage: submission.images.length > 0,
-      pages: submission.figma.frames.map((f) => ({
-        id: f.id,
-        name: f.name,
-        textPreview: f.texts[0]?.content.slice(0, 200) || '(ไม่มีข้อความ)',
-      })),
-    };
+  for (const item of submissions) {
+    const { doc } = item;
 
-    json(res, 200, { record, fileInfo, rubric });
-  } catch (err) {
-    json(res, 500, { error: `Grading ล้มเหลว: ${(err as Error).message}` });
+    // Students — แต่ละชิ้นงานมีรายชื่อสมาชิกของตัวเอง
+    const students: StudentInfo[] = (item.students && item.students.length > 0)
+      ? item.students.map(m => ({
+          id: m.id || 'unknown',
+          name: m.name || 'Unknown Student',
+          email: m.email || 'unknown@upload.local',
+        }))
+      : [{ id: 'unknown', name: 'Unknown Student', email: 'unknown@upload.local' }];
+
+    const groupName = item.groupName || (item.mode === 'group' ? 'Unknown Group' : '');
+
+    // ประกอบ Submission
+    try {
+      let submission;
+      if (doc.type === 'pdf') {
+        const pdfBuffer = Buffer.from(doc.base64, 'base64');
+        submission = await pdfToSubmission(pdfBuffer, doc.fileName || 'upload.pdf', students);
+      } else {
+        submission = await imageToSubmission(doc.base64, doc.fileName || 'upload.jpg', doc.mediaType || 'image/jpeg', students);
+      }
+
+      // ใส่ข้อมูลนักศึกษาทั้งหมดลง submission
+      submission.student = students[0];
+      submission.students = students;
+      submission.groupName = groupName;
+
+      // Grade
+      const record = await grade(submission, rubric, judge);
+
+      // File info สำหรับ UI
+      const fileInfo = {
+        type: doc.type,
+        fileName: doc.fileName,
+        pageCount: submission.figma.frames.length,
+        hasImage: submission.images.length > 0,
+        pages: submission.figma.frames.map((f) => ({
+          id: f.id,
+          name: f.name,
+          textPreview: f.texts[0]?.content.slice(0, 200) || '(ไม่มีข้อความ)',
+        })),
+      };
+
+      results.push({ record, fileInfo, fileName: doc.fileName });
+      const label = students.length > 1 ? `${students.length} คน` : students[0].name;
+      console.log(`  ✅ ${doc.fileName} (${label}) — ให้คะแนนเสร็จ`);
+    } catch (err) {
+      errors.push({ fileName: doc.fileName, error: (err as Error).message });
+      console.error(`  ❌ ${doc.fileName} — ${(err as Error).message}`);
+    }
   }
+
+  if (results.length === 0 && errors.length > 0) {
+    json(res, 400, {
+      error: `ไม่สามารถให้คะแนนไฟล์ใดเลย: ${errors.map(e => `${e.fileName}: ${e.error}`).join('; ')}`,
+    });
+    return;
+  }
+
+  json(res, 200, { results, rubric, errors: errors.length > 0 ? errors : undefined });
 }
 
 /**
  * แปลงไฟล์ภาพ (JPG/PNG) เป็น Submission
  * ภาพจะถูก encode เป็น base64 แล้วแนบใน GradingPrompt.images
  */
-async function jpgToSubmission(
-  jpgBase64: string,
+async function imageToSubmission(
+  imgBase64: string,
   fileName: string,
   mediaType: string,
-): Promise<Submission> {
+  students: StudentInfo[],
+) {
   // ตรวจ media type
   const validTypes = ['image/jpeg', 'image/png'];
   if (!validTypes.includes(mediaType)) {
@@ -194,7 +235,7 @@ async function jpgToSubmission(
 
   // ตรวจว่า base64 ถูกต้อง
   try {
-    Buffer.from(jpgBase64, 'base64');
+    Buffer.from(imgBase64, 'base64');
   } catch {
     throw new Error('Base64 string ไม่ถูกต้อง');
   }
@@ -202,7 +243,7 @@ async function jpgToSubmission(
   // OCR — ถอดข้อความจากภาพ
   let ocrText = '';
   try {
-    const ocr = await ocrImage(jpgBase64, mediaType);
+    const ocr = await ocrImage(imgBase64, mediaType);
     ocrText = ocr.text;
     console.log(`  🔍 OCR ถอดข้อความสำเร็จ (${ocr.confidence.toFixed(1)}% confidence, ${ocr.durationMs}ms)`);
   } catch (err) {
@@ -220,13 +261,9 @@ async function jpgToSubmission(
     : [];
 
   return {
-    submissionId: `jpg-${Date.now()}`,
-    student: {
-      id: 'jpg-upload',
-      name: 'Image Upload',
-      email: 'image@upload.local',
-    },
-    groupName: 'Image Upload',
+    submissionId: `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    student: students[0],
+    students,
     fileName,
     folderName: '',
     figma: {
@@ -241,7 +278,7 @@ async function jpgToSubmission(
     images: [{
       frameId: 'image-1',
       mediaType: mediaType as 'image/jpeg',
-      dataBase64: jpgBase64,
+      dataBase64: imgBase64,
     }],
     externalUseConsent: true,
   };

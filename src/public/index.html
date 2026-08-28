@@ -15,13 +15,9 @@
       padding: 2rem;
     }
 
-    .container { max-width: 900px; margin: 0 auto; }
+    .container { max-width: 960px; margin: 0 auto; }
 
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-      color: #f8fafc;
-    }
+    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: #f8fafc; }
 
     .subtitle {
       color: #94a3b8;
@@ -29,13 +25,24 @@
       font-size: 0.95rem;
     }
 
-    /* ── Upload Section ── */
-    .upload-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
+    /* ── Section Headers ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
     }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Rubric Upload ── */
+    .rubric-section { margin-bottom: 2rem; }
 
     .upload-card {
       background: #1e293b;
@@ -47,259 +54,381 @@
       transition: all 0.2s;
     }
 
-    .upload-card:hover {
-      border-color: #3b82f6;
-      background: #1e293b;
-    }
-
-    .upload-card.has-file {
-      border-color: #22c55e;
-      border-style: solid;
-    }
-
+    .upload-card:hover { border-color: #3b82f6; }
+    .upload-card.has-file { border-color: #22c55e; border-style: solid; }
     .upload-card input[type="file"] { display: none; }
 
     .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
     .upload-label { font-weight: 600; margin-bottom: 0.25rem; }
     .upload-hint { font-size: 0.8rem; color: #64748b; }
-    .upload-filename {
-      margin-top: 0.75rem;
-      padding: 0.4rem 0.75rem;
-      background: #0f172a;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #22c55e;
-      word-break: break-all;
-    }
 
-    /* ── Actions ── */
-    .actions {
+    .file-item {
       display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      background: #0f172a;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
     }
 
-    .btn {
-      padding: 0.75rem 2rem;
-      border: none;
+    .file-item-name { color: #22c55e; word-break: break-all; flex: 1; }
+
+    .file-item-remove {
+      background: none; border: none; color: #ef4444; cursor: pointer;
+      font-size: 1.1rem; padding: 0 0.25rem; margin-left: 0.5rem;
+    }
+
+    .file-item-remove:hover { color: #fca5a5; }
+
+    /* ── Submissions Section ── */
+    .submissions-section { margin-bottom: 1.5rem; }
+
+    .submission-row {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #334155;
+    }
+
+    .submission-row-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .submission-row-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .submission-row-number {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #3b82f6;
+    }
+
+    .submission-row-remove {
+      background: none; border: 1px solid #ef4444; color: #ef4444;
+      border-radius: 6px; padding: 0.3rem 0.75rem; font-size: 0.8rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .submission-row-remove:hover { background: #ef4444; color: white; }
+
+    /* ── Mode Toggle ── */
+    .mode-toggle {
+      display: flex;
+      border: 1px solid #334155;
       border-radius: 8px;
-      font-size: 1rem;
+      overflow: hidden;
+    }
+
+    .mode-toggle-btn {
+      padding: 0.35rem 0.85rem;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
     }
 
-    .btn-primary {
+    .mode-toggle-btn:not(:last-child) {
+      border-right: 1px solid #334155;
+    }
+
+    .mode-toggle-btn.active {
       background: #3b82f6;
       color: white;
-      flex: 1;
     }
 
+    /* ── Form Fields ── */
+    .submission-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .form-group label {
+      font-size: 0.8rem; color: #94a3b8; font-weight: 500;
+    }
+
+    .form-group input {
+      padding: 0.55rem 0.7rem;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus { outline: none; border-color: #3b82f6; }
+    .form-group input::placeholder { color: #475569; }
+
+    /* ── Group Section ── */
+    .group-section {
+      margin-bottom: 1rem;
+    }
+
+    .group-name-row {
+      margin-bottom: 0.75rem;
+    }
+
+    .group-name-row .form-group {
+      max-width: 300px;
+    }
+
+    .members-label {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .member-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 1fr 32px;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: end;
+    }
+
+    .member-row .form-group input {
+      padding: 0.45rem 0.6rem;
+      font-size: 0.8rem;
+    }
+
+    .member-remove {
+      background: none;
+      border: 1px solid #475569;
+      color: #ef4444;
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .member-remove:hover { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+
+    .add-member-btn {
+      background: none;
+      border: 1px dashed #334155;
+      color: #64748b;
+      border-radius: 8px;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0.25rem;
+    }
+
+    .add-member-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+
+    /* ── File Upload ── */
+    .submission-file {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .submission-file-btn {
+      padding: 0.5rem 1rem;
+      background: #334155;
+      border: 1px dashed #475569;
+      border-radius: 8px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .submission-file-btn:hover { border-color: #3b82f6; color: #e2e8f0; }
+    .submission-file-btn.has-file { border-style: solid; border-color: #22c55e; color: #22c55e; }
+
+    .submission-file-name {
+      font-size: 0.85rem; color: #94a3b8;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .submission-file-remove {
+      background: none; border: none; color: #ef4444;
+      cursor: pointer; font-size: 1rem; padding: 0;
+    }
+
+    .submission-file-remove:hover { color: #fca5a5; }
+
+    /* ── Add Button ── */
+    .add-submission-btn {
+      width: 100%; padding: 0.75rem;
+      background: transparent; border: 2px dashed #334155;
+      border-radius: 12px; color: #64748b; font-size: 0.9rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .add-submission-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+
+    /* ── Actions ── */
+    .actions { display: flex; gap: 1rem; margin-bottom: 2rem; }
+
+    .btn {
+      padding: 0.75rem 2rem; border: none; border-radius: 8px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+
+    .btn-primary { background: #3b82f6; color: white; flex: 1; }
     .btn-primary:hover:not(:disabled) { background: #2563eb; }
     .btn-primary:disabled { background: #475569; cursor: not-allowed; }
-
-    .btn-secondary {
-      background: #334155;
-      color: #e2e8f0;
-    }
-
+    .btn-secondary { background: #334155; color: #e2e8f0; }
     .btn-secondary:hover { background: #475569; }
 
     /* ── Status ── */
     .status {
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      display: none;
+      padding: 1rem 1.5rem; border-radius: 8px;
+      margin-bottom: 1.5rem; display: none;
     }
 
-    .status.loading {
-      display: block;
-      background: #1e3a5f;
-      border: 1px solid #3b82f6;
-      color: #93c5fd;
-    }
-
-    .status.error {
-      display: block;
-      background: #3b1a1a;
-      border: 1px solid #ef4444;
-      color: #fca5a5;
-    }
-
-    .status.success {
-      display: block;
-      background: #1a3b2a;
-      border: 1px solid #22c55e;
-      color: #86efac;
-    }
+    .status.loading { display: block; background: #1e3a5f; border: 1px solid #3b82f6; color: #93c5fd; }
+    .status.error { display: block; background: #3b1a1a; border: 1px solid #ef4444; color: #fca5a5; }
+    .status.success { display: block; background: #1a3b2a; border: 1px solid #22c55e; color: #86efac; }
 
     .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #93c5fd;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 0.5rem;
-      vertical-align: middle;
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid #93c5fd; border-top-color: transparent;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin-right: 0.5rem; vertical-align: middle;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Results ── */
     .results { display: none; }
-
     .results.visible { display: block; }
 
     .result-card {
-      background: #1e293b;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
+      background: #1e293b; border-radius: 12px;
+      padding: 1.5rem; margin-bottom: 1.5rem;
     }
 
     .result-card h2 {
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      color: #f8fafc;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 1.1rem; margin-bottom: 1rem; color: #f8fafc;
+      display: flex; align-items: center; gap: 0.5rem;
     }
 
-    .total-score {
-      text-align: center;
-      padding: 2rem;
+    .total-score { text-align: center; padding: 2rem; }
+    .total-score .number { font-size: 3rem; font-weight: 700; color: #3b82f6; }
+    .total-score .label { color: #94a3b8; font-size: 0.9rem; }
+
+    .summary-bar {
+      display: flex; gap: 1.5rem; padding: 1rem 1.5rem;
+      background: #1e293b; border-radius: 12px;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
     }
 
-    .total-score .number {
-      font-size: 3rem;
-      font-weight: 700;
-      color: #3b82f6;
+    .summary-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .summary-item .value { font-size: 1.5rem; font-weight: 700; color: #3b82f6; }
+    .summary-item .label { font-size: 0.8rem; color: #94a3b8; }
+
+    .submission-tabs {
+      display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
 
-    .total-score .label {
-      color: #94a3b8;
-      font-size: 0.9rem;
+    .submission-tab {
+      padding: 0.5rem 1rem; background: #1e293b;
+      border: 1px solid #334155; border-radius: 8px;
+      color: #94a3b8; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
     }
 
-    /* ── Score Table ── */
-    .score-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    .submission-tab:hover { border-color: #3b82f6; color: #e2e8f0; }
+    .submission-tab.active { background: #3b82f6; border-color: #3b82f6; color: white; }
 
-    .score-table th,
-    .score-table td {
-      padding: 0.75rem 1rem;
-      text-align: left;
-      border-bottom: 1px solid #334155;
-    }
+    .submission-panel { display: none; }
+    .submission-panel.active { display: block; }
 
-    .score-table th {
-      color: #94a3b8;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .score-table { width: 100%; border-collapse: collapse; }
+    .score-table th, .score-table td {
+      padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #334155;
     }
+    .score-table th { color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    .score-bar {
-      height: 8px;
-      background: #334155;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 0.25rem;
-    }
+    .score-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin-top: 0.25rem; }
+    .score-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
 
-    .score-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      transition: width 0.5s ease;
-    }
-
-    .source-badge {
-      display: inline-block;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
+    .source-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
     .source-rule { background: #1e3a5f; color: #93c5fd; }
     .source-llm { background: #3b1a3b; color: #d8b4fe; }
 
-    /* ── Evidence ── */
-    .evidence-list {
-      margin-top: 0.5rem;
-      padding-left: 1rem;
-      font-size: 0.85rem;
-      color: #94a3b8;
-    }
-
+    .evidence-list { margin-top: 0.5rem; padding-left: 1rem; font-size: 0.85rem; color: #94a3b8; }
     .evidence-list li { margin-bottom: 0.25rem; }
 
-    /* ── Trace ── */
-    .trace-list {
-      font-size: 0.8rem;
-      font-family: 'SF Mono', Monaco, monospace;
-    }
-
-    .trace-item {
-      display: flex;
-      gap: 1rem;
-      padding: 0.35rem 0;
-      border-bottom: 1px solid #1e293b;
-    }
-
+    .trace-list { font-size: 0.8rem; font-family: 'SF Mono', Monaco, monospace; }
+    .trace-item { display: flex; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid #1e293b; }
     .trace-time { color: #64748b; min-width: 80px; }
     .trace-step { color: #f59e0b; min-width: 90px; font-weight: 600; }
     .trace-detail { color: #94a3b8; }
 
-    /* ── PDF Info ── */
-    .pdf-pages {
-      font-size: 0.85rem;
-    }
-
-    .pdf-page {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #334155;
-    }
-
+    .pdf-pages { font-size: 0.85rem; }
+    .pdf-page { padding: 0.5rem 0; border-bottom: 1px solid #334155; }
     .pdf-page-id { color: #3b82f6; font-weight: 600; }
     .pdf-page-text { color: #94a3b8; margin-top: 0.25rem; }
 
-    /* ── Responsive ── */
-    @media (max-width: 640px) {
-      .upload-section { grid-template-columns: 1fr; }
+    @media (max-width: 768px) {
+      .submission-fields { grid-template-columns: 1fr 1fr; }
+      .member-row { grid-template-columns: 1fr 1fr 1fr 32px; }
       body { padding: 1rem; }
     }
 
+    @media (max-width: 480px) {
+      .submission-fields { grid-template-columns: 1fr; }
+      .member-row { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🎓 HWAI Grading Agent</h1>
-    <p class="subtitle">อัปโหลด rubric (.csv) และเอกสาร PDF เพื่อให้ AI ให้คะแนน</p>
+    <p class="subtitle">อัปโหลด rubric (.csv) แล้วเพิ่มชิ้นงานทีละตัว — รองรับทั้งงานเดี่ยวและงานกลุ่ม</p>
 
-    <!-- Upload Section -->
-    <div class="upload-section">
+    <!-- Rubric Section -->
+    <div class="rubric-section">
+      <div class="section-header">
+        <span class="section-title">📋 Rubric</span>
+      </div>
       <div class="upload-card" id="rubricCard" onclick="document.getElementById('rubricInput').click()">
         <input type="file" id="rubricInput" accept=".csv" />
         <div class="upload-icon">📋</div>
         <div class="upload-label">Rubric File</div>
         <div class="upload-hint">เลือกไฟล์ .csv</div>
-        <div class="upload-filename" id="rubricName" style="display:none"></div>
+        <div id="rubricFileInfo"></div>
       </div>
+    </div>
 
-      <div class="upload-card" id="docCard" onclick="document.getElementById('docInput').click()">
-        <input type="file" id="docInput" accept=".pdf,.jpg,.jpeg,.png" />
-        <div class="upload-icon">📄</div>
-        <div class="upload-label">Document</div>
-        <div class="upload-hint">เลือกไฟล์ .pdf / .jpg / .png</div>
-        <div class="upload-filename" id="docName" style="display:none"></div>
+    <!-- Submissions Section -->
+    <div class="submissions-section">
+      <div class="section-header">
+        <span class="section-title">📝 ชิ้นงาน (Submissions)</span>
       </div>
+      <div id="submissionRows"></div>
+      <button class="add-submission-btn" onclick="addSubmission()">+ เพิ่มชิ้นงาน</button>
     </div>
 
     <!-- Actions -->
@@ -307,7 +436,7 @@
       <button class="btn btn-primary" id="gradeBtn" disabled onclick="startGrading()">
         🚀 เริ่มให้คะแนน
       </button>
-      <button class="btn btn-secondary" onclick="resetAll()">ล้าง</button>
+      <button class="btn btn-secondary" onclick="resetAll()">ล้างทั้งหมด</button>
     </div>
 
     <!-- Status -->
@@ -315,122 +444,265 @@
 
     <!-- Results -->
     <div class="results" id="results">
-      <!-- Total Score -->
-      <div class="result-card">
-        <h2>📊 ผลการให้คะแนน</h2>
-        <div class="total-score">
-          <div class="number" id="totalScore">-</div>
-          <div class="label">คะแนนรวมถ่วงน้ำหนัก</div>
+      <div class="summary-bar" id="summaryBar">
+        <div class="summary-item">
+          <span class="value" id="summaryCount">0</span>
+          <span class="label">ชิ้นงาน</span>
+        </div>
+        <div class="summary-item">
+          <span class="value" id="summaryAvg">-</span>
+          <span class="label">คะแนนเฉลี่ย</span>
+        </div>
+        <div class="summary-item">
+          <span class="value" id="summaryMax">-</span>
+          <span class="label">คะแนนสูงสุด</span>
+        </div>
+        <div class="summary-item">
+          <span class="value" id="summaryMin">-</span>
+          <span class="label">คะแนนต่ำสุด</span>
         </div>
       </div>
-
-      <!-- File Info -->
-      <div class="result-card" id="fileInfoCard" style="display:none">
-        <h2 id="fileInfoTitle">📄 ข้อมูลจากไฟล์</h2>
-        <div class="pdf-pages" id="filePages"></div>
-      </div>
-
-      <!-- Score Details -->
-      <div class="result-card">
-        <h2>📝 คะแนนรายเกณฑ์</h2>
-        <table class="score-table">
-          <thead>
-            <tr>
-              <th>เกณฑ์</th>
-              <th>คะแนน</th>
-              <th>แหล่งที่มา</th>
-              <th>เหตุผล</th>
-            </tr>
-          </thead>
-          <tbody id="scoreBody"></tbody>
-        </table>
-      </div>
-
-      <!-- Trace -->
-      <div class="result-card">
-        <h2>🔍 บันทึกสืบย้อน</h2>
-        <div class="trace-list" id="traceList"></div>
-      </div>
+      <div class="submission-tabs" id="submissionTabs"></div>
+      <div id="submissionPanels"></div>
     </div>
   </div>
 
   <script>
     let rubricCsv = null;
-    let pdfBase64 = null;
-    let pdfFileName = null;
-    let jpgBase64 = null;
-    let jpgFileName = null;
-    let jpgMediaType = null;
-    let docType = null; // 'pdf' or 'image'
+    let rubricFileName = null;
+    let submissions = []; // Array of submission objects
+    let nextSubmissionId = 1;
 
-    // ── File Handlers ──
+    // ── Rubric ──
     document.getElementById('rubricInput').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-
-       // Define what happens when reading succeeds
       reader.onload = () => {
         rubricCsv = reader.result;
-
-        // Display in UI
-        document.getElementById('rubricName').textContent = file.name;
-        document.getElementById('rubricName').style.display = 'block';
-        document.getElementById('rubricCard').classList.add('has-file');
+        rubricFileName = file.name;
+        renderRubric();
         checkReady();
       };
       reader.readAsText(file);
     });
 
-    document.getElementById('docInput').addEventListener('change', (e) => {
-      const file = e.target.files[0];
+    function renderRubric() {
+      const card = document.getElementById('rubricCard');
+      const info = document.getElementById('rubricFileInfo');
+      if (rubricCsv) {
+        card.classList.add('has-file');
+        info.innerHTML = `<div class="file-item">
+          <span class="file-item-name">📋 ${esc(rubricFileName)}</span>
+          <button class="file-item-remove" onclick="event.stopPropagation(); removeRubric()">×</button>
+        </div>`;
+      } else {
+        card.classList.remove('has-file');
+        info.innerHTML = '';
+      }
+    }
+
+    function removeRubric() {
+      rubricCsv = null; rubricFileName = null;
+      document.getElementById('rubricInput').value = '';
+      renderRubric(); checkReady();
+    }
+
+    // ── Submissions ──
+    function addSubmission() {
+      const id = nextSubmissionId++;
+      submissions.push({
+        id,
+        mode: 'single', // 'single' or 'group'
+        groupName: '',
+        students: [{ studentId: '', studentName: '', studentEmail: '' }],
+        file: null, base64: null, type: null, fileName: null, mediaType: null,
+      });
+      renderSubmissions();
+      checkReady();
+    }
+
+    function removeSubmission(id) {
+      submissions = submissions.filter(s => s.id !== id);
+      renderSubmissions(); checkReady();
+    }
+
+    function toggleMode(id, mode) {
+      const sub = submissions.find(s => s.id === id);
+      if (!sub) return;
+      sub.mode = mode;
+      if (mode === 'single' && sub.students.length === 0) {
+        sub.students = [{ studentId: '', studentName: '', studentEmail: '' }];
+      }
+      renderSubmissions();
+    }
+
+    function updateField(id, field, value) {
+      const sub = submissions.find(s => s.id === id);
+      if (sub) sub[field] = value;
+    }
+
+    function updateStudent(subId, memberIdx, field, value) {
+      const sub = submissions.find(s => s.id === subId);
+      if (sub && sub.students[memberIdx]) {
+        sub.students[memberIdx][field] = value;
+      }
+    }
+
+    function addMember(subId) {
+      const sub = submissions.find(s => s.id === subId);
+      if (sub) {
+        sub.students.push({ studentId: '', studentName: '', studentEmail: '' });
+        renderSubmissions();
+      }
+    }
+
+    function removeMember(subId, memberIdx) {
+      const sub = submissions.find(s => s.id === subId);
+      if (sub && sub.students.length > 1) {
+        sub.students.splice(memberIdx, 1);
+        renderSubmissions();
+      }
+    }
+
+    function renderSubmissions() {
+      const container = document.getElementById('submissionRows');
+      if (submissions.length === 0) {
+        container.innerHTML = '<p style="color:#64748b;font-size:0.9rem;text-align:center;padding:1rem">ยังไม่มีชิ้นงาน — กดปุ่มด้านล่างเพื่อเพิ่ม</p>';
+        return;
+      }
+
+      container.innerHTML = submissions.map((s, idx) => {
+        const hasFile = s.base64 !== null;
+        const fileBtnClass = hasFile ? 'submission-file-btn has-file' : 'submission-file-btn';
+        const fileBtnText = hasFile ? `✓ ${esc(s.fileName)}` : '📎 เลือกไฟล์';
+
+        const singleActive = s.mode === 'single' ? 'active' : '';
+        const groupActive = s.mode === 'group' ? 'active' : '';
+
+        // Single mode: first student fields
+        const st = s.students[0] || { studentId: '', studentName: '', studentEmail: '' };
+
+        const singleFields = `
+          <div class="submission-fields">
+            <div class="form-group">
+              <label>รหัสนักศึกษา</label>
+              <input type="text" placeholder="เช่น 65130500001"
+                value="${ea(st.studentId)}"
+                oninput="updateStudent(${s.id}, 0, 'studentId', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>ชื่อ-นามสกุล</label>
+              <input type="text" placeholder="เช่น สมชาย ใจดี"
+                value="${ea(st.studentName)}"
+                oninput="updateStudent(${s.id}, 0, 'studentName', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>อีเมล</label>
+              <input type="email" placeholder="เช่น 65130500001@msu.ac.th"
+                value="${ea(st.studentEmail)}"
+                oninput="updateStudent(${s.id}, 0, 'studentEmail', this.value)" />
+            </div>
+          </div>`;
+
+        const groupFields = `
+          <div class="group-section">
+            <div class="group-name-row">
+              <div class="form-group">
+                <label>ชื่อกลุ่ม</label>
+                <input type="text" placeholder="เช่น กลุ่ม 1"
+                  value="${ea(s.groupName)}"
+                  oninput="updateField(${s.id}, 'groupName', this.value)" />
+              </div>
+            </div>
+            <div class="members-label">👥 สมาชิกในกลุ่ม (${s.students.length} คน)</div>
+            ${s.students.map((m, mi) => `
+              <div class="member-row">
+                <div class="form-group">
+                  <label>รหัส</label>
+                  <input type="text" placeholder="651..."
+                    value="${ea(m.studentId)}"
+                    oninput="updateStudent(${s.id}, ${mi}, 'studentId', this.value)" />
+                </div>
+                <div class="form-group">
+                  <label>ชื่อ-นามสกุล</label>
+                  <input type="text" placeholder="ชื่อ นามสกุล"
+                    value="${ea(m.studentName)}"
+                    oninput="updateStudent(${s.id}, ${mi}, 'studentName', this.value)" />
+                </div>
+                <div class="form-group">
+                  <label>อีเมล</label>
+                  <input type="email" placeholder="xxx@msu.ac.th"
+                    value="${ea(m.studentEmail)}"
+                    oninput="updateStudent(${s.id}, ${mi}, 'studentEmail', this.value)" />
+                </div>
+                <button class="member-remove" onclick="removeMember(${s.id}, ${mi})"
+                  title="ลบสมาชิก" ${s.students.length <= 1 ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''}>×</button>
+              </div>
+            `).join('')}
+            <button class="add-member-btn" onclick="addMember(${s.id})">+ เพิ่มสมาชิก</button>
+          </div>`;
+
+        const studentFields = s.mode === 'single' ? singleFields : groupFields;
+
+        return `
+          <div class="submission-row" data-id="${s.id}">
+            <div class="submission-row-header">
+              <div class="submission-row-left">
+                <span class="submission-row-number">ชิ้นงานที่ ${idx + 1}</span>
+                <div class="mode-toggle">
+                  <button class="mode-toggle-btn ${singleActive}" onclick="toggleMode(${s.id}, 'single')">👤 เดี่ยว</button>
+                  <button class="mode-toggle-btn ${groupActive}" onclick="toggleMode(${s.id}, 'group')">👥 กลุ่ม</button>
+                </div>
+              </div>
+              <button class="submission-row-remove" onclick="removeSubmission(${s.id})">ลบ</button>
+            </div>
+            ${studentFields}
+            <div class="submission-file">
+              <label class="${fileBtnClass}" for="fileInput-${s.id}">${fileBtnText}</label>
+              <input type="file" id="fileInput-${s.id}" accept=".pdf,.jpg,.jpeg,.png"
+                style="display:none" onchange="handleFileSelect(${s.id}, this)" />
+              ${hasFile ? `<span class="submission-file-name">${esc(s.fileName)}</span>
+                <button class="submission-file-remove" onclick="removeFile(${s.id})">×</button>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function handleFileSelect(id, input) {
+      const file = input.files[0];
       if (!file) return;
       const ext = file.name.split('.').pop().toLowerCase();
       const isPdf = ext === 'pdf';
       const isImage = ['jpg', 'jpeg', 'png'].includes(ext);
-
-      if (!isPdf && !isImage) {
-        alert('กรุณาเลือกไฟล์ PDF หรือ JPG/PNG เท่านั้น');
-        return;
-      }
-
-      // Reset previous doc selection
-      pdfBase64 = null;
-      pdfFileName = null;
-      jpgBase64 = null;
-      jpgFileName = null;
-      jpgMediaType = null;
-      docType = null;
+      if (!isPdf && !isImage) { alert('กรุณาเลือกไฟล์ PDF หรือ JPG/PNG เท่านั้น'); input.value = ''; return; }
 
       const reader = new FileReader();
-
-      // Define what happens when reading succeeds
       reader.onload = () => {
         const base64 = reader.result.split(',')[1];
-        if (isPdf) {
-          pdfBase64 = base64;
-          pdfFileName = file.name;
-          docType = 'pdf';
-        } else {
-          const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png' };
-          jpgBase64 = base64;
-          jpgFileName = file.name;
-          jpgMediaType = mimeMap[ext] || 'image/jpeg';
-          docType = 'image';
+        const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', pdf: 'application/pdf' };
+        const sub = submissions.find(s => s.id === id);
+        if (sub) {
+          sub.file = file; sub.base64 = base64;
+          sub.type = isPdf ? 'pdf' : 'image';
+          sub.fileName = file.name;
+          sub.mediaType = mimeMap[ext] || 'image/jpeg';
         }
-
-        // Display in UI
-        document.getElementById('docName').textContent = file.name;
-        document.getElementById('docName').style.display = 'block';
-        document.getElementById('docCard').classList.add('has-file');
-        checkReady();
+        renderSubmissions(); checkReady();
       };
       reader.readAsDataURL(file);
-    });
+    }
+
+    function removeFile(id) {
+      const sub = submissions.find(s => s.id === id);
+      if (sub) { sub.file = null; sub.base64 = null; sub.type = null; sub.fileName = null; sub.mediaType = null; }
+      renderSubmissions(); checkReady();
+    }
 
     function checkReady() {
-      // ต้องมี rubric + อย่างน้อยหนึ่งใน PDF หรือ JPG
-      document.getElementById('gradeBtn').disabled = !(rubricCsv && (pdfBase64 || jpgBase64));
+      const hasRubric = rubricCsv !== null;
+      const hasAtLeastOne = submissions.some(s => s.base64 !== null);
+      document.getElementById('gradeBtn').disabled = !(hasRubric && hasAtLeastOne);
     }
 
     // ── Grading ──
@@ -438,13 +710,12 @@
       const btn = document.getElementById('gradeBtn');
       const status = document.getElementById('status');
       const results = document.getElementById('results');
-
-      btn.disabled = true;
-      btn.textContent = '⏳ กำลังให้คะแนน...';
+      btn.disabled = true; btn.textContent = '⏳ กำลังให้คะแนน...';
       results.classList.remove('visible');
 
+      const totalDocs = submissions.filter(s => s.base64).length;
       status.className = 'status loading';
-      status.innerHTML = '<span class="spinner"></span> กำลังวิเคราะห์เอกสารและให้คะแนน...';
+      status.innerHTML = `<span class="spinner"></span> กำลังวิเคราะห์ ${totalDocs} ชิ้นงาน...`;
 
       try {
         const res = await fetch('/api/grade', {
@@ -452,130 +723,114 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             rubricCsv,
-            pdfBase64: pdfBase64 || null,
-            pdfFileName: pdfFileName || null,
-            jpgBase64: jpgBase64 || null,
-            jpgFileName: jpgFileName || null,
-            jpgMediaType: jpgMediaType || null,
+            submissions: submissions.filter(s => s.base64).map(s => ({
+              mode: s.mode,
+              groupName: s.groupName,
+              students: s.students.map(m => ({
+                id: m.studentId, name: m.studentName, email: m.studentEmail,
+              })),
+              doc: {
+                base64: s.base64, fileName: s.fileName,
+                type: s.type, mediaType: s.mediaType,
+              },
+            })),
           }),
         });
-
         const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || 'เกิดข้อผิดพลาด');
-        }
-
-        // Show success
+        if (!res.ok) throw new Error(data.error || 'เกิดข้อผิดพลาด');
         status.className = 'status success';
-        status.textContent = '✅ ให้คะแนนเสร็จสิ้น';
-
-        // Render results
+        status.textContent = `✅ ให้คะแนนเสร็จสิ้น — ${data.results.length} ชิ้นงาน`;
         renderResults(data);
         results.classList.add('visible');
-
       } catch (err) {
         status.className = 'status error';
         status.textContent = `❌ ${err.message}`;
       } finally {
-        btn.disabled = false;
-        btn.textContent = '🚀 เริ่มให้คะแนน';
-        checkReady();
+        btn.disabled = false; btn.textContent = '🚀 เริ่มให้คะแนน'; checkReady();
       }
     }
 
-    // ── Render Results ──
+    // ── Results ──
     function renderResults(data) {
-      const { record, fileInfo, rubric } = data;
+      const { results, rubric } = data;
+      const scores = results.map(r => r.record.weightedTotal * 100);
+      document.getElementById('summaryCount').textContent = results.length;
+      document.getElementById('summaryAvg').textContent = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+      document.getElementById('summaryMax').textContent = Math.max(...scores).toFixed(1);
+      document.getElementById('summaryMin').textContent = Math.min(...scores).toFixed(1);
 
-      // Total score
+      const tabsEl = document.getElementById('submissionTabs');
+      const panelsEl = document.getElementById('submissionPanels');
+      tabsEl.style.display = results.length === 1 ? 'none' : 'flex';
+
+      tabsEl.innerHTML = results.map((r, i) => {
+        const score = (r.record.weightedTotal * 100).toFixed(1);
+        const label = r.fileInfo?.fileName || `ชิ้นงาน ${i + 1}`;
+        return `<div class="submission-tab ${i === 0 ? 'active' : ''}" onclick="switchTab(${i})" data-tab="${i}">${esc(label)} — ${score}</div>`;
+      }).join('');
+
+      panelsEl.innerHTML = results.map((r, i) =>
+        `<div class="submission-panel ${i === 0 ? 'active' : ''}" data-panel="${i}">${renderSingleResult(r, rubric)}</div>`
+      ).join('');
+    }
+
+    function switchTab(index) {
+      document.querySelectorAll('.submission-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.submission-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.submission-tab[data-tab="${index}"]`).classList.add('active');
+      document.querySelector(`.submission-panel[data-panel="${index}"]`).classList.add('active');
+    }
+
+    function renderSingleResult(result, rubric) {
+      const { record, fileInfo } = result;
       const total = (record.weightedTotal * 100).toFixed(1);
-      document.getElementById('totalScore').textContent = `${total} / 100`;
+      let html = `<div class="result-card"><h2>📊 ผลการให้คะแนน</h2>
+        <div class="total-score"><div class="number">${total} / 100</div>
+        <div class="label">คะแนนรวมถ่วงน้ำหนัก</div></div></div>`;
 
-      // File info
       if (fileInfo) {
-        const card = document.getElementById('fileInfoCard');
-        card.style.display = 'block';
-        const titleEl = document.getElementById('fileInfoTitle');
-        titleEl.textContent = fileInfo.type === 'pdf' ? '📄 ข้อมูลจาก PDF' : '🖼️ ข้อมูลจากไฟล์ภาพ';
-        const pagesDiv = document.getElementById('filePages');
-        const imageTag = fileInfo.hasImage ? ' <span style="color:#22c55e">✓ มีภาพ base64 แนบ</span>' : '';
-        pagesDiv.innerHTML = fileInfo.pages.map(p => `
-          <div class="pdf-page">
-            <span class="pdf-page-id">${p.id}</span> — ${p.name}
-            <div class="pdf-page-text">${escapeHtml(p.textPreview)}${p.textPreview.length >= 200 ? '...' : ''}</div>
-          </div>
-        `).join('') + (fileInfo.type === 'jpg' ? `<div style="margin-top:0.75rem;padding:0.5rem;background:#0f172a;border-radius:6px;font-size:0.85rem">🖼️ ไฟล์: ${escapeHtml(fileInfo.fileName)}${imageTag}</div>` : '');
+        const title = fileInfo.type === 'pdf' ? '📄 ข้อมูลจาก PDF' : '🖼️ ข้อมูลจากไฟล์ภาพ';
+        html += `<div class="result-card"><h2>${title}</h2><div class="pdf-pages">
+          ${fileInfo.pages.map(p => `<div class="pdf-page"><span class="pdf-page-id">${p.id}</span> — ${esc(p.name)}
+            <div class="pdf-page-text">${esc(p.textPreview)}${p.textPreview.length >= 200 ? '...' : ''}</div></div>`).join('')}
+        </div></div>`;
       }
 
-      // Score details
-      const scoreBody = document.getElementById('scoreBody');
-      scoreBody.innerHTML = record.scores.map(s => {
-        const criterion = rubric.criteria.find(c => c.id === s.criterionId);
-        const max = criterion?.max || 3;
-        const pct = (s.score / max) * 100;
-        const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
-        const sourceClass = s.source === 'rule' ? 'source-rule' : 'source-llm';
+      html += `<div class="result-card"><h2>📝 คะแนนรายเกณฑ์</h2>
+        <table class="score-table"><thead><tr><th>เกณฑ์</th><th>คะแนน</th><th>แหล่งที่มา</th><th>เหตุผล</th></tr></thead>
+        <tbody>${record.scores.map(s => {
+          const c = rubric.criteria.find(x => x.id === s.criterionId);
+          const max = c?.max || 3; const pct = (s.score / max) * 100;
+          const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+          const srcCls = s.source === 'rule' ? 'source-rule' : 'source-llm';
+          return `<tr><td><strong>${s.criterionId}</strong> — ${c?.name || s.criterionId}
+            <ul class="evidence-list">${s.evidence.map(e => `<li><strong>${e.frameId}</strong>: ${esc(e.note)}</li>`).join('')}</ul></td>
+            <td><strong>${s.score}</strong> / ${max}<div class="score-bar"><div class="score-bar-fill" style="width:${pct}%;background:${color}"></div></div></td>
+            <td><span class="source-badge ${srcCls}">${s.source}</span></td>
+            <td style="color:#94a3b8;font-size:0.85rem">${esc(s.reason)}</td></tr>`;
+        }).join('')}</tbody></table></div>`;
 
-        return `
-          <tr>
-            <td>
-              <strong>${s.criterionId}</strong> — ${criterion?.name || s.criterionId}
-              <ul class="evidence-list">
-                ${s.evidence.map(e => `<li><strong>${e.frameId}</strong>: ${escapeHtml(e.note)}</li>`).join('')}
-              </ul>
-            </td>
-            <td>
-              <strong>${s.score}</strong> / ${max}
-              <div class="score-bar">
-                <div class="score-bar-fill" style="width: ${pct}%; background: ${color}"></div>
-              </div>
-            </td>
-            <td><span class="source-badge ${sourceClass}">${s.source}</span></td>
-            <td style="color: #94a3b8; font-size: 0.85rem">${escapeHtml(s.reason)}</td>
-          </tr>
-        `;
-      }).join('');
-
-      // Trace
-      const traceList = document.getElementById('traceList');
-      traceList.innerHTML = record.trace.map(t => {
-        const time = new Date(t.at).toLocaleTimeString('th-TH');
-        return `
-          <div class="trace-item">
-            <span class="trace-time">${time}</span>
-            <span class="trace-step">${t.step}</span>
-            <span class="trace-detail">${escapeHtml(t.detail)}</span>
-          </div>
-        `;
-      }).join('');
+      html += `<div class="result-card"><h2>🔍 บันทึกสืบย้อน</h2><div class="trace-list">
+        ${record.trace.map(t => `<div class="trace-item"><span class="trace-time">${new Date(t.at).toLocaleTimeString('th-TH')}</span>
+          <span class="trace-step">${t.step}</span><span class="trace-detail">${esc(t.detail)}</span></div>`).join('')}
+      </div></div>`;
+      return html;
     }
 
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function ea(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     function resetAll() {
-      rubricCsv = null;
-      pdfBase64 = null;
-      pdfFileName = null;
-      jpgBase64 = null;
-      jpgFileName = null;
-      jpgMediaType = null;
-
+      rubricCsv = null; rubricFileName = null; submissions = []; nextSubmissionId = 1;
       document.getElementById('rubricInput').value = '';
-      document.getElementById('docInput').value = '';
-      document.getElementById('rubricName').style.display = 'none';
-      document.getElementById('docName').style.display = 'none';
-      document.getElementById('rubricCard').classList.remove('has-file');
-      document.getElementById('docCard').classList.remove('has-file');
+      renderRubric(); renderSubmissions();
       document.getElementById('gradeBtn').disabled = true;
       document.getElementById('status').className = 'status';
       document.getElementById('results').classList.remove('visible');
-      document.getElementById('fileInfoCard').style.display = 'none';
     }
+
+    // Start with one empty submission
+    addSubmission();
   </script>
 </body>
 </html>
