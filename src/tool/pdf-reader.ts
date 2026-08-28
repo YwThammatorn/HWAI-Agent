@@ -1,4 +1,4 @@
-import type { Frame, Submission, TextNode } from './types.ts';
+import type { Frame, Submission, TextNode } from '../types.ts';
 
 // pdf-parse จะถูก import แบบ dynamic เพื่อไม่ให้พังถ้าไม่ได้ติดตั้ง
 let pdfParse: typeof import('pdf-parse') | null = null;
@@ -20,7 +20,6 @@ async function loadPdfParse() {
 export async function pdfToSubmission(
   pdfBuffer: Buffer,
   fileName: string,
-  students?: { id: string; name: string; email: string }[],
 ): Promise<Submission> {
   const pdf = await loadPdfParse();
   const data = await pdf(pdfBuffer);
