@@ -4,8 +4,6 @@
 
 - all rubric criterions have only 'llm' in layer column
 - all test files is blank
-- UI can upload and grade just 1 submission
-- Submission personal data still created not input -> jpgToSubmission()
 
 ## เริ่มต้นใช้งาน
 
