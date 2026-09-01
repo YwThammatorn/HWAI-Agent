@@ -3,7 +3,9 @@
 ## commit version remark (from dev)
 
 - all rubric criterions have only 'llm' in layer column
-- all test files is blank
+- all test files is blank except evaluation.test.ts (ai generated)
+- evaluation module still not test with group submissions
+- evaluation metrics still not manual calculate
 
 ## เริ่มต้นใช้งาน
 
@@ -21,6 +23,8 @@ GROQ_API_KEY=gsk_... npm run server  # เปิด web UI ที่ http://loca
 3. อัปโหลดไฟล์ **PDF** หรือ **.jpg / .png** ของนักศึกษา
 4. กด **เริ่มให้คะแนน**
 5. ดูผลคะแนนรายเกณฑ์ + บันทึกสืบย้อน
+6. (ถ้ามี) อัปโหลด **Ground Truth (.csv)** แล้วกด **เทียบกับ Ground Truth**
+7. ดูผล evaluation (QWK, Agreement, Bias) + Export CSV
 
 ## รูปแบบ CSV Rubric
 
@@ -42,6 +46,39 @@ C4,ความเหมาะสมของ flow,0.3,3,llm,,,CLO3,3,ดีม�
 - `rule_param`: ค่าสำหรับ rule (ตัวเลข หรือชื่อเฟรมคั่นด้วย `;`)
 - `layer`: `rule` = ชั้นกฎ (วัดตรง ๆ), `llm` = ให้โมเดลตัดสิน
 - น้ำหนักรวมต้องเท่ากับ 1.0
+
+## รูปแบบ CSV Ground Truth
+
+ใช้สำหรับเทียบคะแนน AI กับคะแนนอาจารย์ — รูปแบบเดียวกับ rubric
+
+### แบบที่ 1: Long Format (แนะนำ)
+
+```csv
+submission_id,criterion_id,score,reason
+S001,C1,3,ข้อมูลครบถ้วน รูปภาพเหมาะสม
+S001,C2,2,ข้อมูลบางส่วน
+S002,C1,4,ดีมาก ข้อมูลครบทุกส่วน
+S002,C2,3,ดี แต่ยังไม่ลึกซึ้ง
+```
+
+### แบบที่ 2: Wide Format
+
+```csv
+submission_id,C1_score,C1_reason,C2_score,C2_reason
+S001,3,ข้อมูลครบ,2,บางส่วน
+S002,4,ดีมาก,3,ดี
+```
+
+### คอลัมน์ที่รองรับ
+
+| คอลัมน์ | ชื่อที่รองรับ | คำอธิบาย |
+|---------|--------------|----------|
+| **submission_id** | `submission_id`, `student_id`, `file_name`, `รหัสชิ้นงาน`, `รหัสนักศึกษา`, `ชื่อไฟล์` | รหัสชิ้นงาน (ต้องตรงกับที่กรอกใน UI) |
+| **criterion_id** | `criterion_id`, `criterion`, `รหัสเกณฑ์`, `เกณฑ์` | รหัสเกณฑ์ (ต้องตรงกับ rubric) |
+| **score** | `score`, `grade`, `points`, `คะแนน` | คะแนนจากอาจารย์ (ตัวเลข) |
+| **reason** | `reason`, `comment`, `feedback`, `เหตุผล`, `คำอธิบาย` | เหตุผลประกอบคะแนน |
+
+> **หมายเหตุ:** คอลัมน์ student_name, group_name เป็น optional
 
 ---
 
@@ -69,6 +106,8 @@ grade(submission, rubric, judge)
 | `src/prompt.ts` | ประกอบ prompt + ด่านสุดท้ายก่อนออกจากเครื่อง |
 | `src/judge.ts` | ตัวต่อ LLM (Mock, vLLM, Anthropic) + ตัวตรวจคำตอบ |
 | `src/grade.ts` | ตัวเดินท่อ ฟังก์ชันเดียวที่ฝั่งเว็บเรียก |
+| `src/ground-truth.ts` | **แปลง Excel → GroundTruthData** |
+| `src/evaluation.ts` | **คำนวณ QWK, Agreement, Bias, MAE + Export CSV** |
 | `src/public/index.html` | **Web UI สำหรับอัปโหลดไฟล์และดูผล** |
 
 ---
@@ -98,5 +137,16 @@ grade(submission, rubric, judge)
 ## ทดสอบ
 
 ```bash
-npm test    # 19 เทสต์ — รันได้โดยไม่ต้องมี API key
+npm test    # 10 เทสต์ — รันได้โดยไม่ต้องมี API key
 ```
+
+## เมตริก Evaluation (ตามเอกสาร 03-ai-rl-research §2.3-2.5)
+
+| เมตริก | คำอธิบาย | เกณฑ์ความสำเร็จ |
+|--------|----------|------------------|
+| **Exact Agreement** | คะแนนตรงกันพอดี | ≥ 70% |
+| **Adjacent Agreement** | ห่างไม่เกิน 1 ระดับ | ≥ 90% |
+| **QWK** | Quadratic Weighted Kappa | CI lower ≥ 0.60 |
+| **Bias** | Mean Signed Error (บอกทิศ) | |Bias| < 0.25 ระดับ |
+| **MAE** | Mean Absolute Error | ใช้ประกอบ |
+| **ICC(2,1)** | Intraclass Correlation | เทียบกับวรรณกรรม |

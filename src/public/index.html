@@ -391,6 +391,141 @@
     .pdf-page-id { color: #3b82f6; font-weight: 600; }
     .pdf-page-text { color: #94a3b8; margin-top: 0.25rem; }
 
+    /* ── Ground Truth Section ── */
+    .gt-section { margin-bottom: 2rem; }
+
+    .gt-upload-card {
+      background: #1e293b;
+      border: 2px dashed #8b5cf6;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .gt-upload-card:hover { border-color: #a78bfa; }
+    .gt-upload-card.has-file { border-color: #22c55e; border-style: solid; }
+    .gt-upload-card input[type="file"] { display: none; }
+
+    /* ── Evaluation Section ── */
+    .eval-section { display: none; margin-bottom: 2rem; }
+    .eval-section.visible { display: block; }
+
+    .eval-summary-bar {
+      display: flex; gap: 1.5rem; padding: 1rem 1.5rem;
+      background: #1e293b; border-radius: 12px;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+
+    .eval-summary-item {
+      display: flex; flex-direction: column; gap: 0.2rem;
+      min-width: 120px;
+    }
+
+    .eval-summary-item .value {
+      font-size: 1.5rem; font-weight: 700;
+    }
+
+    .eval-summary-item .label {
+      font-size: 0.8rem; color: #94a3b8;
+    }
+
+    .eval-metric-good { color: #22c55e; }
+    .eval-metric-warn { color: #f59e0b; }
+    .eval-metric-bad { color: #ef4444; }
+
+    .eval-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .eval-table th, .eval-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+
+    .eval-table th {
+      color: #94a3b8;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .eval-table td { color: #e2e8f0; }
+
+    .eval-pass-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .eval-pass-badge.passed { background: #1a3b2a; color: #86efac; }
+    .eval-pass-badge.failed { background: #3b1a1a; color: #fca5a5; }
+
+    .eval-details-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .eval-details-list li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #1e293b;
+      font-size: 0.9rem;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .btn-export {
+      padding: 0.6rem 1.25rem;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-export:hover { border-color: #3b82f6; color: #e2e8f0; }
+
+    .criteria-comparison {
+      margin-top: 1rem;
+    }
+
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 1fr 100px 100px 100px 1fr;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-bottom: 1px solid #334155;
+      align-items: center;
+    }
+
+    .comparison-row.header {
+      font-weight: 600;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    .comparison-score {
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .score-match { color: #22c55e; }
+    .score-off-by-1 { color: #f59e0b; }
+    .score-off-by-more { color: #ef4444; }
+
     @media (max-width: 768px) {
       .submission-fields { grid-template-columns: 1fr 1fr; }
       .member-row { grid-template-columns: 1fr 1fr 1fr 32px; }
@@ -422,6 +557,20 @@
       </div>
     </div>
 
+    <!-- Ground Truth Section -->
+    <div class="gt-section">
+      <div class="section-header">
+        <span class="section-title">🎯 Ground Truth (คะแนนอาจารย์)</span>
+      </div>
+      <div class="gt-upload-card" id="gtCard" onclick="document.getElementById('gtInput').click()">
+        <input type="file" id="gtInput" accept=".csv" />
+        <div class="upload-icon">🎯</div>
+        <div class="upload-label">Ground Truth CSV File</div>
+        <div class="upload-hint">เลือกไฟล์ .csv — คอลัมน์: submission_id, criterion_id, score, reason (ดูรายละเอียดใน README)</div>
+        <div id="gtFileInfo"></div>
+      </div>
+    </div>
+
     <!-- Submissions Section -->
     <div class="submissions-section">
       <div class="section-header">
@@ -431,10 +580,60 @@
       <button class="add-submission-btn" onclick="addSubmission()">+ เพิ่มชิ้นงาน</button>
     </div>
 
+    <!-- Evaluation Section -->
+    <div class="eval-section" id="evalSection">
+      <div class="section-header">
+        <span class="section-title">📊 ผลการเทียบกับ Ground Truth</span>
+      </div>
+
+      <!-- Evaluation Summary -->
+      <div class="eval-summary-bar" id="evalSummaryBar"></div>
+
+      <!-- Success Criteria -->
+      <div class="result-card" id="evalSuccessCard"></div>
+
+      <!-- Per-Criterion Results -->
+      <div class="result-card">
+        <h2>📋 ผลรายเกณฑ์</h2>
+        <div style="overflow-x: auto;">
+          <table class="eval-table" id="evalCriteriaTable">
+            <thead>
+              <tr>
+                <th>เกณฑ์</th>
+                <th>N</th>
+                <th>Exact</th>
+                <th>Adjacent</th>
+                <th>QWK</th>
+                <th>QWK 95% CI</th>
+                <th>Bias</th>
+                <th>MAE</th>
+              </tr>
+            </thead>
+            <tbody id="evalCriteriaBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Detailed Comparison -->
+      <div class="result-card">
+        <h2>🔍 เปรียบเทียบรายชิ้นงาน</h2>
+        <div id="evalComparisonContent"></div>
+      </div>
+
+      <!-- Export Buttons -->
+      <div class="export-buttons">
+        <button class="btn-export" onclick="exportEvalCSV()">📥 Export Summary CSV</button>
+        <button class="btn-export" onclick="exportDetailedCSV()">📥 Export Detailed CSV</button>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="actions">
       <button class="btn btn-primary" id="gradeBtn" disabled onclick="startGrading()">
         🚀 เริ่มให้คะแนน
+      </button>
+      <button class="btn btn-secondary" onclick="startEvaluation()" id="evalBtn" disabled>
+        📊 เทียบกับ Ground Truth
       </button>
       <button class="btn btn-secondary" onclick="resetAll()">ล้างทั้งหมด</button>
     </div>
@@ -470,8 +669,13 @@
   <script>
     let rubricCsv = null;
     let rubricFileName = null;
+    let groundTruthCsv = null;
+    let groundTruthFileName = null;
     let submissions = []; // Array of submission objects
     let nextSubmissionId = 1;
+    let lastGradingData = null; // เก็บผลลัพธ์จากการให้คะแนนล่าสุด
+    let lastRubric = null;
+    let lastEvaluationResult = null; // เก็บผล evaluation ล่าสุด
 
     // ── Rubric ──
     document.getElementById('rubricInput').addEventListener('change', (e) => {
@@ -506,6 +710,41 @@
       rubricCsv = null; rubricFileName = null;
       document.getElementById('rubricInput').value = '';
       renderRubric(); checkReady();
+    }
+
+    // ── Ground Truth ── (เหมือน rubric — อ่านเป็น text ตรงๆ ไม่ผ่าน base64)
+    document.getElementById('gtInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        groundTruthCsv = reader.result;
+        groundTruthFileName = file.name;
+        renderGroundTruth();
+        checkReady();
+      };
+      reader.readAsText(file);
+    });
+
+    function renderGroundTruth() {
+      const card = document.getElementById('gtCard');
+      const info = document.getElementById('gtFileInfo');
+      if (groundTruthCsv) {
+        card.classList.add('has-file');
+        info.innerHTML = `<div class="file-item">
+          <span class="file-item-name">🎯 ${esc(groundTruthFileName)}</span>
+          <button class="file-item-remove" onclick="event.stopPropagation(); removeGroundTruth()">×</button>
+        </div>`;
+      } else {
+        card.classList.remove('has-file');
+        info.innerHTML = '';
+      }
+    }
+
+    function removeGroundTruth() {
+      groundTruthCsv = null; groundTruthFileName = null;
+      document.getElementById('gtInput').value = '';
+      renderGroundTruth(); checkReady();
     }
 
     // ── Submissions ──
@@ -702,7 +941,9 @@
     function checkReady() {
       const hasRubric = rubricCsv !== null;
       const hasAtLeastOne = submissions.some(s => s.base64 !== null);
+      const hasGroundTruth = groundTruthCsv !== null;
       document.getElementById('gradeBtn').disabled = !(hasRubric && hasAtLeastOne);
+      document.getElementById('evalBtn').disabled = !(hasRubric && hasGroundTruth && lastGradingData);
     }
 
     // ── Grading ──
@@ -753,6 +994,8 @@
     // ── Results ──
     function renderResults(data) {
       const { results, rubric } = data;
+      lastGradingData = data;
+      lastRubric = rubric;
       const scores = results.map(r => r.record.weightedTotal * 100);
       document.getElementById('summaryCount').textContent = results.length;
       document.getElementById('summaryAvg').textContent = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
@@ -772,6 +1015,9 @@
       panelsEl.innerHTML = results.map((r, i) =>
         `<div class="submission-panel ${i === 0 ? 'active' : ''}" data-panel="${i}">${renderSingleResult(r, rubric)}</div>`
       ).join('');
+
+      // เปิดปุ่ม evaluation ถ้ามี ground truth
+      checkReady();
     }
 
     function switchTab(index) {
@@ -817,16 +1063,197 @@
       return html;
     }
 
+    // ── Evaluation ──
+    async function startEvaluation() {
+      if (!lastGradingData || !groundTruthCsv || !lastRubric) {
+        alert('กรุณาให้คะแนนก่อน แล้วค่อยเทียบกับ Ground Truth');
+        return;
+      }
+
+      const btn = document.getElementById('evalBtn');
+      const status = document.getElementById('status');
+      btn.disabled = true; btn.textContent = '⏳ กำลังเทียบ...';
+
+      try {
+        const res = await fetch('/api/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groundTruthCsv,
+            groundTruthFileName,
+            gradingRecords: lastGradingData.results.map(r => r.record),
+            rubric: lastRubric,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'เกิดข้อผิดพลาด');
+
+        lastEvaluationResult = data;
+        renderEvaluationResults(data);
+
+        status.className = 'status success';
+        status.textContent = `✅ เทียบกับ Ground Truth สำเร็จ — ${data.evaluationResult.summary.totalPairs} คู่ข้อมูล`;
+      } catch (err) {
+        status.className = 'status error';
+        status.textContent = `❌ ${err.message}`;
+      } finally {
+        btn.disabled = false; btn.textContent = '📊 เทียบกับ Ground Truth';
+      }
+    }
+
+    function renderEvaluationResults(data) {
+      const { evaluationResult: eval_ } = data;
+      const evalSection = document.getElementById('evalSection');
+      evalSection.classList.add('visible');
+
+      // Summary bar
+      const summaryBar = document.getElementById('evalSummaryBar');
+      const qwkClass = eval_.summary.overallQWK >= 0.6 ? 'eval-metric-good' : eval_.summary.overallQWK >= 0.4 ? 'eval-metric-warn' : 'eval-metric-bad';
+      const exactClass = eval_.summary.overallExactAgreement >= 0.7 ? 'eval-metric-good' : eval_.summary.overallExactAgreement >= 0.5 ? 'eval-metric-warn' : 'eval-metric-bad';
+      const adjacentClass = eval_.summary.overallAdjacentAgreement >= 0.9 ? 'eval-metric-good' : eval_.summary.overallAdjacentAgreement >= 0.8 ? 'eval-metric-warn' : 'eval-metric-bad';
+      const biasClass = Math.abs(eval_.summary.overallBias) <= 0.25 ? 'eval-metric-good' : Math.abs(eval_.summary.overallBias) <= 0.5 ? 'eval-metric-warn' : 'eval-metric-bad';
+
+      summaryBar.innerHTML = `
+        <div class="eval-summary-item">
+          <span class="value ${qwkClass}">${eval_.summary.overallQWK.toFixed(3)}</span>
+          <span class="label">QWK</span>
+        </div>
+        <div class="eval-summary-item">
+          <span class="value ${exactClass}">${(eval_.summary.overallExactAgreement * 100).toFixed(1)}%</span>
+          <span class="label">Exact Agreement</span>
+        </div>
+        <div class="eval-summary-item">
+          <span class="value ${adjacentClass}">${(eval_.summary.overallAdjacentAgreement * 100).toFixed(1)}%</span>
+          <span class="label">Adjacent Agreement</span>
+        </div>
+        <div class="eval-summary-item">
+          <span class="value ${biasClass}">${eval_.summary.overallBias.toFixed(3)}</span>
+          <span class="label">Bias (Mean Signed Error)</span>
+        </div>
+        <div class="eval-summary-item">
+          <span class="value" style="color:#94a3b8">${eval_.summary.overallMAE.toFixed(3)}</span>
+          <span class="label">MAE</span>
+        </div>
+        <div class="eval-summary-item">
+          <span class="value" style="color:#94a3b8">${eval_.summary.totalPairs}</span>
+          <span class="label">คู่ข้อมูล</span>
+        </div>
+      `;
+
+      // Success criteria
+      const successCard = document.getElementById('evalSuccessCard');
+      const passedClass = eval_.successCriteria.passed ? 'passed' : 'failed';
+      const passedText = eval_.successCriteria.passed ? '✅ ผ่านเกณฑ์' : '❌ ไม่ผ่านเกณฑ์';
+      successCard.innerHTML = `
+        <h2>🎯 เกณฑ์ความสำเร็จ (§2.5)</h2>
+        <span class="eval-pass-badge ${passedClass}">${passedText}</span>
+        <ul class="eval-details-list" style="margin-top: 1rem;">
+          ${eval_.successCriteria.details.map(d => `<li>${d}</li>`).join('')}
+        </ul>
+        <p style="margin-top: 1rem; font-size: 0.85rem; color: #64748b;">
+          อ้างอิงจากเอกสาร 03-ai-rl-research §2.5:<br>
+          • QWK CI lower bound ≥ 0.60<br>
+          • |Bias| ทุกเกณฑ์ < 0.25 ระดับ<br>
+          • Adjacent agreement ≥ 90%
+        </p>
+      `;
+
+      // Per-criterion table
+      const criteriaBody = document.getElementById('evalCriteriaBody');
+      criteriaBody.innerHTML = eval_.criteria.map(c => {
+        const qwkCls = c.qwk >= 0.6 ? 'eval-metric-good' : c.qwk >= 0.4 ? 'eval-metric-warn' : 'eval-metric-bad';
+        const exactCls = c.exactAgreement >= 0.7 ? 'eval-metric-good' : c.exactAgreement >= 0.5 ? 'eval-metric-warn' : 'eval-metric-bad';
+        const adjCls = c.adjacentAgreement >= 0.9 ? 'eval-metric-good' : c.adjacentAgreement >= 0.8 ? 'eval-metric-warn' : 'eval-metric-bad';
+        const biasCls = Math.abs(c.bias) <= 0.25 ? 'eval-metric-good' : Math.abs(c.bias) <= 0.5 ? 'eval-metric-warn' : 'eval-metric-bad';
+        return `<tr>
+          <td><strong>${c.criterionId}</strong> — ${esc(c.criterionName)}</td>
+          <td>${c.n}</td>
+          <td class="${exactCls}">${(c.exactAgreement * 100).toFixed(1)}%</td>
+          <td class="${adjCls}">${(c.adjacentAgreement * 100).toFixed(1)}%</td>
+          <td class="${qwkCls}">${c.qwk.toFixed(3)}</td>
+          <td style="font-size:0.8rem">[${c.qwkCI[0].toFixed(3)}, ${c.qwkCI[1].toFixed(3)}]</td>
+          <td class="${biasCls}">${c.bias.toFixed(3)}</td>
+          <td>${c.mae.toFixed(3)}</td>
+        </tr>`;
+      }).join('');
+
+      // Detailed comparison
+      const comparisonContent = document.getElementById('evalComparisonContent');
+      let comparisonHtml = '';
+      for (const c of eval_.criteria) {
+        comparisonHtml += `<h3 style="margin: 1rem 0 0.5rem; font-size: 0.95rem; color: #94a3b8;">${c.criterionId} — ${esc(c.criterionName)}</h3>`;
+        comparisonHtml += `<div class="comparison-row header">
+          <div>ชิ้นงาน</div>
+          <div style="text-align:center">AI</div>
+          <div style="text-align:center">GT</div>
+          <div style="text-align:center">Diff</div>
+          <div>เหตุผล (AI vs GT)</div>
+        </div>`;
+        for (const p of c.pairs) {
+          const diff = p.aiScore - p.gtScore;
+          const diffAbs = Math.abs(diff);
+          const diffCls = diffAbs === 0 ? 'score-match' : diffAbs === 1 ? 'score-off-by-1' : 'score-off-by-more';
+          comparisonHtml += `<div class="comparison-row">
+            <div style="font-size:0.85rem">${esc(p.submissionId)}</div>
+            <div class="comparison-score">${p.aiScore}</div>
+            <div class="comparison-score">${p.gtScore}</div>
+            <div class="comparison-score ${diffCls}">${diff >= 0 ? '+' : ''}${diff}</div>
+            <div style="font-size:0.8rem; color:#64748b; max-height:60px; overflow:hidden;">
+              <div><strong>AI:</strong> ${esc(p.aiReason.substring(0, 100))}${p.aiReason.length > 100 ? '...' : ''}</div>
+              <div><strong>GT:</strong> ${esc(p.gtReason.substring(0, 100))}${p.gtReason.length > 100 ? '...' : ''}</div>
+            </div>
+          </div>`;
+        }
+      }
+      comparisonContent.innerHTML = comparisonHtml;
+    }
+
+    // ── Export ──
+    function exportEvalCSV() {
+      if (!lastEvaluationResult) {
+        alert('ยังไม่มีผล evaluation ให้ export');
+        return;
+      }
+      downloadFile(lastEvaluationResult.csv, 'evaluation_summary.csv', 'text/csv');
+    }
+
+    function exportDetailedCSV() {
+      if (!lastEvaluationResult) {
+        alert('ยังไม่มีผล evaluation ให้ export');
+        return;
+      }
+      downloadFile(lastEvaluationResult.detailedCSV, 'evaluation_detailed.csv', 'text/csv');
+    }
+
+    function downloadFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
     function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function ea(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     function resetAll() {
-      rubricCsv = null; rubricFileName = null; submissions = []; nextSubmissionId = 1;
+      rubricCsv = null; rubricFileName = null;
+      groundTruthCsv = null; groundTruthFileName = null;
+      submissions = []; nextSubmissionId = 1;
+      lastGradingData = null; lastRubric = null; lastEvaluationResult = null;
       document.getElementById('rubricInput').value = '';
-      renderRubric(); renderSubmissions();
+      document.getElementById('gtInput').value = '';
+      renderRubric(); renderGroundTruth(); renderSubmissions();
       document.getElementById('gradeBtn').disabled = true;
+      document.getElementById('evalBtn').disabled = true;
       document.getElementById('status').className = 'status';
       document.getElementById('results').classList.remove('visible');
+      document.getElementById('evalSection').classList.remove('visible');
     }
 
     // Start with one empty submission

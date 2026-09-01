@@ -128,6 +128,12 @@ export type GradingRecord = {
   rubricId: string;
   rubricVersion: string;
   alias: string;
+  /** ชื่อไฟล์ต้นฉบับ — ใช้จับคู่กับ ground truth */
+  fileName?: string;
+  /** รหัสนักศึกษา (คนแรก) — ใช้จับคู่กับ ground truth */
+  studentId?: string;
+  /** ชื่อนักศึกษา (คนแรก) — ใช้จับคู่กับ ground truth */
+  studentName?: string;
   scores: CriterionScore[];
   weightedTotal: number;
   /** ยังไม่ใช่คะแนนที่นักศึกษาเห็น — ต้องผ่านการยืนยันของอาจารย์ก่อน */

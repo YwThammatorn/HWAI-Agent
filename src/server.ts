@@ -12,6 +12,8 @@ import { grade } from './grade.ts';
 import { MockJudge } from './judge.ts';
 import { anonymize } from './anonymize.ts';
 import { buildPrompt } from './prompt.ts';
+import { parseGroundTruthCsv, type GroundTruthData } from './ground-truth.ts';
+import { evaluateGrading, exportEvaluationToCSV, exportDetailedCSV, type EvaluationResult } from './evaluation.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,7 +46,10 @@ const server = createServer(async (req, res) => {
     } 
     else if (req.method === 'POST' && req.url === '/api/grade') {
       await handleGrade(req, res);
-    } 
+    }
+    else if (req.method === 'POST' && req.url === '/api/evaluate') {
+      await handleEvaluate(req, res);
+    }
     else {
       // serve static files
       const filePath = req.url?.slice(1) || 'index.html';
@@ -102,6 +107,96 @@ type SubmissionInput = {
   students?: { id?: string; name?: string; email?: string }[];
   doc: DocUpload;
 };
+
+// ══════════════════════════════════════════════════════════════════
+//  Ground Truth & Evaluation
+// ══════════════════════════════════════════════════════════════════
+
+// เก็บ ground truth data ชั่วคราวใน memory (production ควรใช้ DB)
+let storedGroundTruth: GroundTruthData | null = null;
+let storedGradingRecords: unknown[] = [];
+
+/**
+ * POST /api/evaluate
+ * 
+ * รับ:
+ *   - groundTruthCsv: เนื้อหา CSV ของ ground truth (plain text)
+ *   - groundTruthFileName: ชื่อไฟล์
+ *   - gradingRecords: ผลการให้คะแนนจาก AI (GradingRecord[])
+ *   - rubric: rubric ที่ใช้
+ * 
+ * คืน:
+ *   - evaluationResult: ผล evaluation
+ *   - csv: CSV export
+ *   - detailedCSV: CSV รายละเอียด
+ */
+async function handleEvaluate(req: IncomingMessage, res: ServerResponse) {
+  const body = await readJsonBody(req);
+
+  const { groundTruthCsv, groundTruthFileName, gradingRecords, rubric } = body as {
+    groundTruthCsv?: string;
+    groundTruthFileName?: string;
+    gradingRecords?: unknown[];
+    rubric?: unknown;
+  };
+
+  if (!groundTruthCsv) {
+    json(res, 400, { error: 'กรุณาอัปโหลดไฟล์ ground truth (.csv)' });
+    return;
+  }
+
+  if (!gradingRecords || gradingRecords.length === 0) {
+    json(res, 400, { error: 'ไม่มีผลการให้คะแนนจาก AI ให้เทียบ' });
+    return;
+  }
+
+  if (!rubric) {
+    json(res, 400, { error: 'กรุณาอัปโหลด rubric ด้วย' });
+    return;
+  }
+
+  try {
+    // 1. Parse ground truth CSV (ส่งเป็น plain text — encoding ถูกต้องจาก browser แล้ว)
+    const groundTruth = parseGroundTruthCsv(groundTruthCsv, groundTruthFileName || 'ground_truth.csv');
+
+    console.log(`\n  📊 Ground Truth: ${groundTruth.submissionCount} ชิ้นงาน × ${groundTruth.criterionCount} เกณฑ์`);
+    console.log(`  📋 GT submission_ids: ${groundTruth.submissionIds.join(', ')}`);
+
+    // 2. แปลง gradingRecords เป็น GradingRecord[]
+    const records = gradingRecords as import('./types.ts').GradingRecord[];
+    console.log(`  📋 Grading records: ${records.length} รายการ`);
+    for (const r of records) {
+      console.log(`     - submissionId=${r.submissionId} | alias=${r.alias} | fileName=${r.fileName} | studentId=${r.studentId} | studentName=${r.studentName}`);
+    }
+
+    // 3. Run evaluation
+    const evaluationResult = evaluateGrading(records, groundTruth, rubric as import('./types.ts').Rubric);
+
+    // 4. Export CSV
+    const csv = exportEvaluationToCSV(evaluationResult);
+    const detailedCSV = exportDetailedCSV(evaluationResult);
+
+    // เก็บไว้สำหรับ export ทีหลัง
+    storedGroundTruth = groundTruth;
+    storedGradingRecords = gradingRecords;
+
+    console.log(`  ✅ Evaluation สำเร็จ — ${evaluationResult.summary.totalPairs} คู่ข้อมูล`);
+    console.log(`  📈 QWK: ${evaluationResult.summary.overallQWK.toFixed(3)} [${evaluationResult.summary.overallQWKCI[0].toFixed(3)}, ${evaluationResult.summary.overallQWKCI[1].toFixed(3)}]`);
+    console.log(`  📊 Exact Agreement: ${(evaluationResult.summary.overallExactAgreement * 100).toFixed(1)}%`);
+    console.log(`  📊 Adjacent Agreement: ${(evaluationResult.summary.overallAdjacentAgreement * 100).toFixed(1)}%`);
+    console.log(`  📊 Bias: ${evaluationResult.summary.overallBias.toFixed(3)}`);
+    console.log(`  📊 MAE: ${evaluationResult.summary.overallMAE.toFixed(3)}`);
+
+    json(res, 200, {
+      evaluationResult,
+      csv,
+      detailedCSV,
+    });
+  } catch (err) {
+    console.error('  ❌ Evaluation error:', err);
+    json(res, 400, { error: `Evaluation ล้มเหลว: ${(err as Error).message}` });
+  }
+}
 
 async function handleGrade(req: IncomingMessage, res: ServerResponse) {
   const body = await readJsonBody(req);
