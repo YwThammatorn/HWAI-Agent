@@ -5,7 +5,10 @@
 - all rubric criterions have only 'llm' in layer column
 - all test files is blank except evaluation.test.ts (ai generated)
 - evaluation module still not test with group submissions
-- evaluation metrics still not manual calculate
+- evaluation metrics still not checked by manual calculate
+- figma api calls only GET /files (GET /image commented)
+- figma url link have to include node id (url from copy link not have)
+- **figma url link grade still not test** (error 429 : exceed limit)
 
 ## เริ่มต้นใช้งาน
 
@@ -14,16 +17,20 @@ npm install                          # ติดตั้ง dependency
 GROQ_API_KEY=gsk_... npm run server  # เปิด web UI ที่ http://localhost:3000
 ```
 
-ต้องการ Node 22.6+ ต้องมี **GROQ_API_KEY** (จาก [console.groq.com](https://console.groq.com))
+ต้องการ Node 22.6+ ต้องมี:
+- **GROQ_API_KEY** (จาก [console.groq.com](https://console.groq.com))
+- **FIGMA_API_KEY** (จาก Figma > Settings > Personal Access Tokens) — ใช้เฉพาะการตรวจจาก Figma Link
 
 ## วิธีใช้งาน
 
 1. เปิดเบราว์เซอร์ไปที่ `http://localhost:3000`
 2. อัปโหลดไฟล์ **Rubric (.csv)** — ดูรูปแบบด้านล่าง
-3. อัปโหลดไฟล์ **PDF** หรือ **.jpg / .png** ของนักศึกษา
+3. เพิ่มชิ้นงานด้วยวิธีใดวิธีหนึ่ง:
+   - **อัปโหลดไฟล์** — PDF หรือ .jpg / .png
+   - **Figma Link** — วาง URL ของไฟล์ Figma ที่เปิดเป็น public (ดูรายละเอียดด้านล่าง)
 4. กด **เริ่มให้คะแนน**
 5. ดูผลคะแนนรายเกณฑ์ + บันทึกสืบย้อน
-6. (ถ้ามี) อัปโหลด **Ground Truth (.csv)** แล้วกด **เทียบกับ Ground Truth**
+6. (ถ้ามี) อัปdıklarını **Ground Truth (.csv)** แล้วกด **เทียบกับ Ground Truth**
 7. ดูผล evaluation (QWK, Agreement, Bias) + Export CSV
 
 ## รูปแบบ CSV Rubric
@@ -80,6 +87,46 @@ S002,4,ดีมาก,3,ดี
 
 > **หมายเหตุ:** คอลัมน์ student_name, group_name เป็น optional
 
+## ตรวจงานจาก Figma Link
+
+ระบบรองรับการดึงข้อมูลจากไฟล์ Figma สาธารณะผ่าน Figma REST API โดยไม่ต้องดาวน์โหลดไฟล์
+
+### ตั้งค่า
+
+1. ไปที่ Figma > Settings > **Personal Access Tokens**
+2. สร้าง token ใหม่ (ชื่ออะไรก็ได้ เช่น `hwai-grading`)
+3. คัดลอก token มาใส่ใน `.env`:
+
+```
+FIGMA_API_KEY=figd_xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+4. ในไฟล์ Figma ต้องเปิด link sharing:
+   - คลิก **Share** > เปลี่ยนเป็น **"Anyone with the link"** > **"can view"**
+
+### วิธีใช้
+
+1. คัดลอก URL ของ Figma file ที่ต้องการตรวจ เช่น:
+   ```
+   https://www.figma.com/design/RaCHy2Vwuwrr5EalxXcRbo/HWAI_test_66010123?node-id=0-1
+   ```
+2. ในหน้าเว็บ กดปุ่ม **"🔗 Figma Link"** ที่ชิ้นงาน
+3. วาง URL ลงในช่อง input
+4. กด **เริ่มให้คะแนน** ได้เลย
+
+### สิ่งที่ระบบดึงจาก Figma API
+
+| ข้อมูล | วิธีดึง |
+|--------|--------|
+| **Node tree** (ชื่อเฟรม, ตำแหน่ง, ขนาด) | `GET /v1/files/:key?ids=:nodeId` |
+| **TEXT nodes** (ข้อความ, font size, สี) | recursive traversal จาก node tree |
+| **รูปภาพ** ของแต่ละ frame | `GET /v1/images/:key?ids=:nodeIds&format=png&scale=2` |
+
+> **หมายเหตุ:**
+> - URL ต้องมี `?node-id=` กำกับ เพื่อระบุว่าจะตรวจส่วนไหนของไฟล์
+> - ถ้าไม่ระบุ node-id จะเกิด error
+> - ระบบรองรับ URL แบบ `figma.com/design/`, `figma.com/file/`, และ `figma.com/proto/`
+
 ---
 
 ## ท่อทั้งเส้น
@@ -99,6 +146,7 @@ grade(submission, rubric, judge)
 | `src/types.ts` | ชนิดข้อมูลกลาง |
 | `src/csv-rubric.ts` | **แปลง CSV → Rubric object** |
 | `src/pdf-reader.ts` | **แปลง PDF → Submission object** |
+| `src/tool/figma-api.ts` | **ดึงข้อมูลจาก Figma API + แปลงเป็น Submission** |
 | `src/groq-judge.ts` | **ต่อกับ Groq API (qwen/qwen3.8-27b)** |
 | `src/server.ts` | **HTTP server + Web UI** |
 | `src/anonymize.ts` | ถอดตัวตน + คืน "รายการสตริงต้องห้าม" |

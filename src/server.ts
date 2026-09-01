@@ -7,6 +7,7 @@ import { dirname } from 'node:path';
 import { parseCsvRubric } from './rubric.ts';
 import { pdfToSubmission } from './tool/pdf-reader.ts';
 import { ocrImage } from './tool/ocr.ts';
+import { parseFigmaUrl, fetchFigmaData, figmaToSubmission } from './tool/figma-api.ts';
 import { GroqJudge } from './model.ts';
 import { grade } from './grade.ts';
 import { MockJudge } from './judge.ts';
@@ -80,7 +81,8 @@ server.listen(PORT, () => {
   console.log(`\n  🎓 HWAI Grading Agent`);
   console.log(`  ══════════════════════`);
   console.log(`  เปิดเบราว์เซอร์ไปที่ http://localhost:${PORT}`);
-  console.log(`  API key: ${process.env.GROQ_API_KEY ? '✓ ตั้งค่าแล้ว' : '✗ ยังไม่ได้ตั้ง GROQ_API_KEY'}`);
+  console.log(`  GROQ API key: ${process.env.GROQ_API_KEY ? '✓ ตั้งค่าแล้ว' : '✗ ยังไม่ได้ตั้ง GROQ_API_KEY'}`);
+  console.log(`  FIGMA API key: ${process.env.FIGMA_API_KEY ? '✓ ตั้งค่าแล้ว' : '✗ ยังไม่ได้ตั้ง FIGMA_API_KEY'}`);
   console.log();
 });
 
@@ -101,11 +103,17 @@ type DocUpload = {
   mediaType: string;
 };
 
+type FigmaLinkUpload = {
+  type: 'figma';
+  url: string;
+};
+
 type SubmissionInput = {
   mode?: 'single' | 'group';
   groupName?: string;
   students?: { id?: string; name?: string; email?: string }[];
-  doc: DocUpload;
+  doc?: DocUpload;
+  figmaLink?: FigmaLinkUpload;
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -249,8 +257,6 @@ async function handleGrade(req: IncomingMessage, res: ServerResponse) {
   const errors: { fileName: string; error: string }[] = [];
 
   for (const item of submissions) {
-    const { doc } = item;
-
     // Students — แต่ละชิ้นงานมีรายชื่อสมาชิกของตัวเอง
     const students: StudentInfo[] = (item.students && item.students.length > 0)
       ? item.students.map(m => ({
@@ -265,25 +271,42 @@ async function handleGrade(req: IncomingMessage, res: ServerResponse) {
     // ประกอบ Submission
     try {
       let submission;
-      if (doc.type === 'pdf') {
-        const pdfBuffer = Buffer.from(doc.base64, 'base64');
-        submission = await pdfToSubmission(pdfBuffer, doc.fileName || 'upload.pdf', students);
-      } else {
-        submission = await imageToSubmission(doc.base64, doc.fileName || 'upload.jpg', doc.mediaType || 'image/jpeg', students);
-      }
+      let docLabel: string;
 
-      // ใส่ข้อมูลนักศึกษาทั้งหมดลง submission
-      submission.student = students[0];
-      submission.students = students;
-      submission.groupName = groupName;
+      if (item.figmaLink?.type === 'figma' && item.figmaLink.url) {
+        // ── Figma URL mode ──
+        const apiKey = process.env.FIGMA_API_KEY;
+        if (!apiKey) {
+          throw new Error('ยังไม่ได้ตั้ง FIGMA_API_KEY environment variable — กรุณาตั้งค่าก่อนใช้งาน Figma link');
+        }
+        const parsed = parseFigmaUrl(item.figmaLink.url);
+        const figmaData = await fetchFigmaData(apiKey, parsed);
+        submission = await figmaToSubmission(figmaData, students);
+        docLabel = `figma:${parsed.fileName}`;
+      } else if (item.doc) {
+        // ── File upload mode ──
+        const { doc } = item;
+        if (doc.type === 'pdf') {
+          const pdfBuffer = Buffer.from(doc.base64, 'base64');
+          submission = await pdfToSubmission(pdfBuffer, doc.fileName || 'upload.pdf', students);
+        } else {
+          submission = await imageToSubmission(doc.base64, doc.fileName || 'upload.jpg', doc.mediaType || 'image/jpeg', students);
+        }
+        submission.student = students[0];
+        submission.students = students;
+        submission.groupName = groupName;
+        docLabel = doc.fileName;
+      } else {
+        throw new Error('ไม่มีไฟล์หรือ Figma link — กรุณาเพิ่มไฟล์หรือ Figma URL');
+      }
 
       // Grade
       const record = await grade(submission, rubric, judge);
 
       // File info สำหรับ UI
       const fileInfo = {
-        type: doc.type,
-        fileName: doc.fileName,
+        type: submission.figma.fileKey ? 'figma' : (item.doc?.type || 'pdf'),
+        fileName: docLabel,
         pageCount: submission.figma.frames.length,
         hasImage: submission.images.length > 0,
         pages: submission.figma.frames.map((f) => ({
@@ -293,12 +316,13 @@ async function handleGrade(req: IncomingMessage, res: ServerResponse) {
         })),
       };
 
-      results.push({ record, fileInfo, fileName: doc.fileName });
+      results.push({ record, fileInfo, fileName: docLabel });
       const label = students.length > 1 ? `${students.length} คน` : students[0].name;
-      console.log(`  ✅ ${doc.fileName} (${label}) — ให้คะแนนเสร็จ`);
+      console.log(`  ✅ ${docLabel} (${label}) — ให้คะแนนเสร็จ`);
     } catch (err) {
-      errors.push({ fileName: doc.fileName, error: (err as Error).message });
-      console.error(`  ❌ ${doc.fileName} — ${(err as Error).message}`);
+      const errorLabel = item.figmaLink?.url || item.doc?.fileName || 'unknown';
+      errors.push({ fileName: errorLabel, error: (err as Error).message });
+      console.error(`  ❌ ${errorLabel} — ${(err as Error).message}`);
     }
   }
 

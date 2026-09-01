@@ -20,6 +20,7 @@ async function loadPdfParse() {
 export async function pdfToSubmission(
   pdfBuffer: Buffer,
   fileName: string,
+  students: { id: string; name: string; email: string }[] = [],
 ): Promise<Submission> {
   const pdf = await loadPdfParse();
   const data = await pdf(pdfBuffer);

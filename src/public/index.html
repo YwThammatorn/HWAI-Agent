@@ -244,6 +244,38 @@
     .add-member-btn:hover { border-color: #3b82f6; color: #3b82f6; }
 
     /* ── File Upload ── */
+    .submission-file-section {
+      margin-top: 0.75rem;
+    }
+
+    .file-mode-toggle {
+      display: inline-flex;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+
+    .file-mode-toggle .mode-toggle-btn {
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+    }
+
+    .file-mode-toggle .mode-toggle-btn:not(:last-child) {
+      border-right: 1px solid #334155;
+    }
+
+    .file-mode-toggle .mode-toggle-btn.active {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .figma-url-input {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
     .submission-file {
       display: flex;
       align-items: center;
@@ -541,7 +573,7 @@
 <body>
   <div class="container">
     <h1>🎓 HWAI Grading Agent</h1>
-    <p class="subtitle">อัปโหลด rubric (.csv) แล้วเพิ่มชิ้นงานทีละตัว — รองรับทั้งงานเดี่ยวและงานกลุ่ม</p>
+    <p class="subtitle">อัปโหลด rubric (.csv) แล้วเพิ่มชิ้นงานทีละตัว — รองรับทั้งงานเดี่ยว/กลุ่ม, ไฟล์ PDF/Image, และ Figma Link</p>
 
     <!-- Rubric Section -->
     <div class="rubric-section">
@@ -756,6 +788,8 @@
         groupName: '',
         students: [{ studentId: '', studentName: '', studentEmail: '' }],
         file: null, base64: null, type: null, fileName: null, mediaType: null,
+        fileInputMode: 'file', // 'file' or 'figma'
+        figmaUrl: null,
       });
       renderSubmissions();
       checkReady();
@@ -897,12 +931,26 @@
               <button class="submission-row-remove" onclick="removeSubmission(${s.id})">ลบ</button>
             </div>
             ${studentFields}
-            <div class="submission-file">
-              <label class="${fileBtnClass}" for="fileInput-${s.id}">${fileBtnText}</label>
-              <input type="file" id="fileInput-${s.id}" accept=".pdf,.jpg,.jpeg,.png"
-                style="display:none" onchange="handleFileSelect(${s.id}, this)" />
-              ${hasFile ? `<span class="submission-file-name">${esc(s.fileName)}</span>
-                <button class="submission-file-remove" onclick="removeFile(${s.id})">×</button>` : ''}
+            <div class="submission-file-section">
+              <div class="file-mode-toggle">
+                <button class="mode-toggle-btn ${s.fileInputMode === 'file' ? 'active' : ''}" onclick="switchFileMode(${s.id}, 'file')">📎 อัปโหลดไฟล์</button>
+                <button class="mode-toggle-btn ${s.fileInputMode === 'figma' ? 'active' : ''}" onclick="switchFileMode(${s.id}, 'figma')">🔗 Figma Link</button>
+              </div>
+              ${s.fileInputMode === 'file' ? `
+                <div class="submission-file">
+                  <label class="${fileBtnClass}" for="fileInput-${s.id}">${fileBtnText}</label>
+                  <input type="file" id="fileInput-${s.id}" accept=".pdf,.jpg,.jpeg,.png"
+                    style="display:none" onchange="handleFileSelect(${s.id}, this)" />
+                  ${hasFile ? `<span class="submission-file-name">${esc(s.fileName)}</span>
+                    <button class="submission-file-remove" onclick="removeFile(${s.id})">×</button>` : ''}
+                </div>` : `
+                <div class="figma-url-input">
+                  <input type="url" placeholder="https://www.figma.com/design/..."
+                    value="${ea(s.figmaUrl || '')}"
+                    oninput="updateFigmaUrl(${s.id}, this.value)"
+                    style="flex:1;padding:0.55rem 0.7rem;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:0.85rem;" />
+                  ${s.figmaUrl ? `<span style="color:#22c55e;font-size:0.85rem;">✓ พร้อมดึงข้อมูล</span>` : ''}
+                </div>`}
             </div>
           </div>`;
       }).join('');
@@ -938,9 +986,22 @@
       renderSubmissions(); checkReady();
     }
 
+    function switchFileMode(id, mode) {
+      const sub = submissions.find(s => s.id === id);
+      if (!sub) return;
+      sub.fileInputMode = mode;
+      renderSubmissions();
+    }
+
+    function updateFigmaUrl(id, value) {
+      const sub = submissions.find(s => s.id === id);
+      if (sub) sub.figmaUrl = value || null;
+      checkReady();
+    }
+
     function checkReady() {
       const hasRubric = rubricCsv !== null;
-      const hasAtLeastOne = submissions.some(s => s.base64 !== null);
+      const hasAtLeastOne = submissions.some(s => s.base64 !== null || s.figmaUrl);
       const hasGroundTruth = groundTruthCsv !== null;
       document.getElementById('gradeBtn').disabled = !(hasRubric && hasAtLeastOne);
       document.getElementById('evalBtn').disabled = !(hasRubric && hasGroundTruth && lastGradingData);
@@ -954,7 +1015,7 @@
       btn.disabled = true; btn.textContent = '⏳ กำลังให้คะแนน...';
       results.classList.remove('visible');
 
-      const totalDocs = submissions.filter(s => s.base64).length;
+      const totalDocs = submissions.filter(s => s.base64 || s.figmaUrl).length;
       status.className = 'status loading';
       status.innerHTML = `<span class="spinner"></span> กำลังวิเคราะห์ ${totalDocs} ชิ้นงาน...`;
 
@@ -964,17 +1025,25 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             rubricCsv,
-            submissions: submissions.filter(s => s.base64).map(s => ({
-              mode: s.mode,
-              groupName: s.groupName,
-              students: s.students.map(m => ({
-                id: m.studentId, name: m.studentName, email: m.studentEmail,
-              })),
-              doc: {
-                base64: s.base64, fileName: s.fileName,
-                type: s.type, mediaType: s.mediaType,
-              },
-            })),
+            submissions: submissions.filter(s => s.base64 || s.figmaUrl).map(s => {
+              const base = {
+                mode: s.mode,
+                groupName: s.groupName,
+                students: s.students.map(m => ({
+                  id: m.studentId, name: m.studentName, email: m.studentEmail,
+                })),
+              };
+              if (s.figmaUrl) {
+                return { ...base, figmaLink: { type: 'figma', url: s.figmaUrl } };
+              }
+              return {
+                ...base,
+                doc: {
+                  base64: s.base64, fileName: s.fileName,
+                  type: s.type, mediaType: s.mediaType,
+                },
+              };
+            }),
           }),
         });
         const data = await res.json();
