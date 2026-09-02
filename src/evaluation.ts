@@ -120,12 +120,16 @@ export function evaluateGrading(
       const criterion = rubric.criteria.find((c) => c.id === score.criterionId);
       const maxScore = criterion?.max || 4;
 
+      // ถ้า reason ว่าง ให้ใช้ evidence notes เป็น fallback
+      // (Groq model บางตัวไม่ส่ง reason field กลับมา เพราะ response_format: json_object ไม่ enforce schema)
+      const aiReason = score.reason || score.evidence?.map((e) => e.note).join('; ') || '';
+
       const pair: ScorePair = {
         submissionId: record.submissionId,
         criterionId: score.criterionId,
         aiScore: score.score,
         gtScore: gtEntry.score,
-        aiReason: score.reason,
+        aiReason,
         gtReason: gtEntry.reason,
         maxScore,
       };
